@@ -128,7 +128,7 @@ def wires_through(circ: Circuit, p: Point, horiz=None, vert=None) -> list[int]:
     return out
 
 
-def _merged_orientation(circ: Circuit, pt: Point, ends: list[int], through: list[int]) -> bool | None:
+def merged_orientation(circ: Circuit, pt: Point, ends: list[int], through: list[int]) -> bool | None:
     """If Logisim's collinear merge erases connection point `pt`, the merged wires'
     orientation (True for horizontal), else None. `pt` must carry no component end."""
     if not ends:
@@ -172,7 +172,7 @@ def extract(project: Project, circ: Circuit | str) -> Netlist:
     port_points = {p.pos for ps in all_ports for p in ps}
     for pt in set(ends) | port_points:
         through = wires_through(circ, pt, horiz, vert)
-        merged = None if pt in port_points else _merged_orientation(circ, pt, ends[pt], through)
+        merged = None if pt in port_points else merged_orientation(circ, pt, ends[pt], through)
         for i in through:
             if merged is None or circ.wires[i].horizontal == merged:
                 uf.union(("w", i), pt)

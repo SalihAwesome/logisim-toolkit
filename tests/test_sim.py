@@ -40,3 +40,14 @@ def test_verify_sequence_counter(tmp_path):
     assert r.ok and r.passed == 8, r.report()
     wrong = [{"Q0": 0, "Q1": 0}] + expected[1:]
     assert sim.verify_sequence(f, [{}] * 8, wrong, "cnt2").failed == 1
+
+
+def test_write_test_vectors_runs_in_logisim(tmp_path):
+    f = tmp_path / "fa.circ"
+    Project(full_adder()).save(f)
+    vf, exhaustive = sim.write_test_vectors(f, lambda A, B, Cin: {"S": A ^ B ^ Cin, "Cout": (A + B + Cin) >> 1},
+                                            tmp_path / "fa_vectors.txt")
+    lines = vf.read_text().splitlines()
+    assert exhaustive and lines[1].split() == ["A", "B", "Cin", "S", "Cout"] and len(lines) == 2 + 8
+    r = sim.run_vectors(f, vf)
+    assert r.ok and r.passed == 8, r.report()

@@ -33,8 +33,7 @@ SPACING = {
 
 _DUMMY = geometry.Shape((), (0, 0, 0, 0))
 
-# How far a pin label reaches beyond the body, per character (font 12pt bold).
-LABEL_CHAR = 8
+LABEL_CHAR = geometry.LABEL_CHAR
 
 
 def snap(v: float) -> int:
@@ -391,6 +390,8 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
 
     # ---- routing
     allp = list(placed.values())
+    if not allp:
+        return mc
     xs = [p.x + p.shape.bounds[0] for p in allp] + [p.x + p.shape.bounds[0] + p.shape.bounds[2] for p in allp]
     ys = [p.y + p.shape.bounds[1] for p in allp] + [p.y + p.shape.bounds[1] + p.shape.bounds[3] for p in allp]
     grid = route.Grid(snap(min(xs)) - 100, snap(min(ys)) - 100, snap(max(xs)) + 100, snap(max(ys)) + 100)
@@ -500,20 +501,11 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
 
 def _block_label(grid: route.Grid, p: Placed, keep: set) -> None:
     n = p.node
-    if n.name not in ("Pin", "Clock") or not n.label:
-        return
-    w = LABEL_CHAR * len(n.label) + 10
     bx, by, bw, bh = p.shape.bounds
-    x0, y0 = p.x + bx, p.y + by
-    loc = n.attrs.get("labelloc", "west")
-    if loc == "east":
-        grid.block_rect(x0 + bw + 2, y0, w, bh, keep)
-    elif loc == "north":
-        grid.block_rect(x0 + bw // 2 - w // 2, y0 - 20, w, 18, keep)
-    elif loc == "south":
-        grid.block_rect(x0 + bw // 2 - w // 2, y0 + bh + 2, w, 18, keep)
-    else:
-        grid.block_rect(x0 - w, y0, w - 2, bh, keep)
+    comp = model.Component(n.name, (p.x, p.y), n.attrs)
+    box = geometry.label_box(comp, (p.x + bx, p.y + by, bw, bh))
+    if box is not None:
+        grid.block_rect(*box, keep)
 
 
 def _check_unique_locations(mc: model.Circuit) -> None:

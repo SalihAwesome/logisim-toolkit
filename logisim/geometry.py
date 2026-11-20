@@ -833,5 +833,25 @@ def bounds(project: Project, comp: Component) -> Bounds:
     return bx + comp.loc[0], by + comp.loc[1], bw, bh
 
 
+# How far a pin label reaches beyond the body, per character (font 12pt bold).
+LABEL_CHAR = 8
+
+
+def label_box(comp: Component, body: Bounds) -> Bounds | None:
+    """Estimated absolute box of a pin or clock label; `body` is the absolute body bounds."""
+    if comp.name not in ("Pin", "Clock") or not comp.label:
+        return None
+    w = LABEL_CHAR * len(comp.label) + 10
+    x0, y0, bw, bh = body
+    loc = comp.attrs.get("labelloc", "west")
+    if loc == "east":
+        return (x0 + bw + 2, y0, w, bh)
+    if loc == "north":
+        return (x0 + bw // 2 - w // 2, y0 - 20, w, 18)
+    if loc == "south":
+        return (x0 + bw // 2 - w // 2, y0 + bh + 2, w, 18)
+    return (x0 - w, y0, w - 2, bh)
+
+
 def supported() -> list[tuple[str, str]]:
     return sorted(FORMULAS)

@@ -238,15 +238,25 @@ def verify(circ_file: str | os.PathLike, expected_fn: Callable, circuit: str | N
     the pin labels, or a single dict) and returns {output label: value}; omit an
     output or use None for "don't care".
     """
+    with tempfile.TemporaryDirectory() as td:
+        vf, exhaustive = write_test_vectors(circ_file, expected_fn, Path(td) / "vectors.txt", circuit,
+                                            max_exhaustive_bits=max_exhaustive_bits, samples=samples)
+        res = run_vectors(circ_file, vf, circuit)
+    res.exhaustive = exhaustive
+    return res
+
+
+def write_test_vectors(circ_file: str | os.PathLike, expected_fn: Callable, out: str | os.PathLike,
+                       circuit: str | None = None, *, max_exhaustive_bits: int = 14,
+                       samples: int = 1024) -> tuple[Path, bool]:
+    """Write a Logisim test-vector file (for `-w` or the GUI's Test Vector window) with
+    expected_fn's outputs for every input combination, or a sample when there are more
+    than 2**max_exhaustive_bits. Returns the path and whether the file is exhaustive."""
     proj = io.load(circ_file)
     ins, outs = pin_info(proj, circuit)
     space, exhaustive = input_space(ins, max_exhaustive_bits=max_exhaustive_bits, samples=samples)
     rows = [(row, call_reference(expected_fn, row)) for row in space]
-    with tempfile.TemporaryDirectory() as td:
-        vf = write_vectors(Path(td) / "vectors.txt", ins, outs, rows)
-        res = run_vectors(circ_file, vf, circuit)
-    res.exhaustive = exhaustive
-    return res
+    return write_vectors(out, ins, outs, rows), exhaustive
 
 
 # ------------------------------------------------------------------ sequential
