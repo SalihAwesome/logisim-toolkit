@@ -284,7 +284,13 @@ def test_tunnels_clear_of_components_and_wires(tmp_path, name):
                 assert c is t or not _open_overlap(t["bounds"], c["bounds"]), (circ["name"], t, c)
             for x0, y0, x1, y1 in circ["wires"]:
                 if t["loc"] in ([x0, y0], [x1, y1]):
-                    continue  # the tunnel's own stub
+                    stub = (min(x0, x1), min(y0, y1), abs(x1 - x0) or 1e-9, abs(y1 - y0) or 1e-9)
+                    for w in circ["wires"]:
+                        if w == [x0, y0, x1, y1]:
+                            continue
+                        seg =(min(w[0], w[2]), min(w[1], w[3]), abs(w[2] - w[0]) or 1e-9, abs(w[3] - w[1]) or 1e-9)
+                        assert not _open_overlap(stub, seg), ("wire crosses tunnel stub", t["loc"], w)
+                    continue
                 seg =(min(x0, x1), min(y0, y1), abs(x1 - x0) or 1e-9, abs(y1 - y0) or 1e-9)
                 assert not _open_overlap(t["bounds"], seg), (circ["name"], t["loc"], (x0, y0, x1, y1))
 

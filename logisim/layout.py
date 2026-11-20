@@ -455,17 +455,21 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
 
     order = sorted(range(len(nets)),
                    key=lambda i: (rise(nets[i]) > 0, -rise(nets[i]), nest(nets[i]), span(nets[i]), i))
-    tunnels_needed: list[tuple[int, Terminal]] = []
+    tunnels = _Tunnels(circ, mc, project.lib_id("wiring"), grid, nets, placed)
+    wired = {(i, id(t.node), t.port) for i in order for t in nets[i][2]}
     if circ.use_tunnels:
+        # sink tunnels go in before any wire, so wires route around their stubs
         for i in order:
             src, port, sinks = nets[i]
+            # a net that stays within the next column is a short wire; mixing wires and
+            # tunnels on one net puts stubs beside crossings, so only straight runs stay wired
+            local = all(placed[id(t.node)].layer == src.layer + 1 for t in sinks)
             for t in sinks:
                 sp = placed[id(t.node)]
-                if sp.layer == src.layer + 1 and sp.port_abs(t.port)[1] == src.port_abs(port)[1]:
+                if local or sp.layer == src.layer + 1 and sp.port_abs(t.port)[1] == src.port_abs(port)[1]:
                     continue
-                tunnels_needed.append((i, t))
-        straight = {(i, id(t.node), t.port) for i in order for t in nets[i][2]} - {
-            (i, id(t.node), t.port) for i, t in tunnels_needed}
+                wired.discard((i, id(t.node), t.port))
+                tunnels.sink(i, t)
     for i in order:
         src, port, sinks = nets[i]
         start_pt = src.port_abs(port)
@@ -474,21 +478,20 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
         sinks_sorted = sorted(sinks, key=lambda t: abs(placed[id(t.node)].port_abs(t.port)[0] - start_pt[0]) +
                               abs(placed[id(t.node)].port_abs(t.port)[1] - start_pt[1]))
         for t in sinks_sorted:
-            if circ.use_tunnels and (i, id(t.node), t.port) not in straight:
+            if (i, id(t.node), t.port) not in wired:
                 continue
             sp = placed[id(t.node)]
             s_pt = sp.port_abs(t.port)
             path = route.route(grid, i, s_pt, tree, start_dir=outward(sp, t.port))
             if path is None:
-                tunnels_needed.append((i, t))
+                tunnels.sink(i, t)
                 continue
             grid.add_path(path, i)
             for a, b in route.segments(path):
                 mc.add_wire(a, b)
                 tree |= set(route._segment_points(a, b))
 
-    if tunnels_needed:
-        _add_tunnels(circ, mc, project, grid, nets, placed, tunnels_needed)
+    tunnels.drivers()  # last, so a driver's tunnel can branch off its wire
     errors = connectivity_errors(circ, project, mc)
     if errors:
         raise RuntimeError(f"layout of {circ.name!r} broke connectivity: " + "; ".join(errors))
@@ -522,24 +525,32 @@ def _check_unique_locations(mc: model.Circuit) -> None:
         seen[c.loc] = c
 
 
-def _add_tunnels(circ, mc, project, grid, nets, placed, needed) -> None:
-    wiring = project.lib_id("wiring")
-    used_names: set[str] = set()
-    names: dict[int, str] = {}
-    done_driver: set[int] = set()
-    for i, t in needed:
-        src, port, sinks = nets[i]
-        if i not in names:
-            label = _net_name(circ, src, port, sinks)
+class _Tunnels:
+    """Labelled tunnel pairs for the sinks the layout does not wire: one tunnel per such
+    sink, plus one at each of their drivers."""
+
+    def __init__(self, circ: Circuit, mc: model.Circuit, wiring: str, grid: route.Grid, nets, placed) -> None:
+        self.circ, self.mc, self.wiring, self.grid = circ, mc, wiring, grid
+        self.nets, self.placed = nets, placed
+        self.names: dict[int, str] = {}
+
+    def _name(self, i: int) -> str:
+        if i not in self.names:
+            label = _net_name(self.circ, *self.nets[i])
             k, cand = 2, label
-            while cand in used_names:
+            while cand in self.names.values():
                 cand, k = f"{label}_{k}", k + 1
-            used_names.add(cand)
-            names[i] = cand
-        if i not in done_driver:
-            _tunnel_at(mc, grid, wiring, placed[id(src.node)], port, names[i], i, branch=True)
-            done_driver.add(i)
-        _tunnel_at(mc, grid, wiring, placed[id(t.node)], t.port, names[i], i, branch=False)
+            self.names[i] = cand
+        return self.names[i]
+
+    def sink(self, i: int, t: Terminal) -> None:
+        _tunnel_at(self.mc, self.grid, self.wiring, self.placed[id(t.node)], t.port, self._name(i), i,
+                   branch=False)
+
+    def drivers(self) -> None:
+        for i in list(self.names):
+            src, port, _ = self.nets[i]
+            _tunnel_at(self.mc, self.grid, self.wiring, src, port, self.names[i], i, branch=True)
 
 
 def _net_name(circ: Circuit, src: Placed, port: str, sinks: list[Terminal]) -> str:
@@ -567,8 +578,10 @@ def _grid_points(x: int, y: int, w: int, h: int) -> set[tuple[int, int]]:
 
 def _tunnel_at(mc, grid, wiring, p: Placed, port: str, label: str, net: int, *, branch: bool) -> None:
     """Place a tunnel for `net` near p.port, at the first spot whose body touches no
-    component, wire or other tunnel and that the router can join with a short stub.
-    A sink stub must end at its port; a driver's (branch=True) may join its net's wires."""
+    component, wire or other tunnel and that the router can join with a short stub,
+    preferring stubs that cross no wire. A sink stub must end at its port; a driver's
+    (branch=True) may join its net's wires. Stubs are marked hard, so later wires do not
+    cross them."""
     px, py = p.port_abs(port)
     out = port_side(p.shape, port)
     side = (out[1], out[0])
@@ -579,25 +592,31 @@ def _tunnel_at(mc, grid, wiring, p: Placed, port: str, label: str, net: int, *, 
     bx, by, bw, bh = geometry.FORMULAS[("#Wiring", "Tunnel")]("Tunnel", attrs).bounds
     targets = grid.net_points(net) if branch else {(px, py)}
     costs = route.Costs()
-    for off in _TUNNEL_OFFSETS:
-        for along in range(2, 9):
-            t = (px + out[0] * along + side[0] * off, py + out[1] * along + side[1] * off)
-            body = _grid_points(t[0] + bx, t[1] + by, bw, bh) | {t}
-            if any(q in grid.blocked or q in grid.hard or q in grid.run or not grid.inside(q) for q in body):
-                continue
-            added = body - {t}
-            grid.blocked |= added
-            limit = along + abs(off) + 2 * costs.bend + 2 * costs.near_body + 5
-            path = route.route(grid, net, t, targets, costs, start_dir=(-out[0], -out[1]), limit=limit)
-            if path is None or len(path) > 4:
-                grid.blocked -= added
-                continue
-            for a, b in route.segments(path):
-                mc.add_wire(a, b)
-            grid.add_path(path, net)
-            mc.add(model.Component("Tunnel", t, attrs, wiring))
-            grid.block_rect(t[0] + bx, t[1] + by, bw, bh, {t})
-            return
+    spots = [(cross, off, along) for cross in (False, True) for off in _TUNNEL_OFFSETS for along in range(2, 9)]
+    for allow_cross, off, along in spots:
+        t = (px + out[0] * along + side[0] * off, py + out[1] * along + side[1] * off)
+        body = _grid_points(t[0] + bx, t[1] + by, bw, bh) | {t}
+        if any(q in grid.blocked or q in grid.hard or q in grid.run or not grid.inside(q) for q in body):
+            continue
+        added = body - {t}
+        grid.blocked |= added
+        limit = along + abs(off) + 2 * costs.bend + 2 * costs.near_body + 5
+        if allow_cross:
+            limit += 2 * costs.cross
+        path = route.route(grid, net, t, targets, costs, start_dir=(-out[0], -out[1]), limit=limit)
+        stub = [q for a, b in route.segments(path or []) for q in route._segment_points(a, b)]
+        if path is None or len(path) > 4 or not allow_cross and any(
+                route._foreign_run(grid, q, net) for q in stub):
+            grid.blocked -= added
+            continue
+        for a, b in route.segments(path):
+            mc.add_wire(a, b)
+        grid.add_path(path, net)
+        for q in stub:
+            grid.hard.setdefault(q, net)
+        mc.add(model.Component("Tunnel", t, attrs, wiring))
+        grid.block_rect(t[0] + bx, t[1] + by, bw, bh, {t})
+        return
     raise RuntimeError(f"no room for a tunnel at {p.node!r}.{port}")
 
 
