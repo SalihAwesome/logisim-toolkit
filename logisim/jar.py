@@ -14,7 +14,6 @@ import os
 import re
 import shutil
 import subprocess
-import tempfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -140,10 +139,24 @@ def run_jar(args: list[str], *, timeout: float = 120, cwd: str | None = None) ->
     return RunResult(r.returncode, r.stdout, r.stderr)
 
 
+def cache_dir() -> Path:
+    """Per-user cache folder (never the shared system temp dir)."""
+    if os.environ.get("LOGISIM_TOOLKIT_CACHE"):
+        d = Path(os.environ["LOGISIM_TOOLKIT_CACHE"])
+    elif os.name == "nt":
+        d = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "logisim-toolkit"
+    else:
+        d = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "logisim-toolkit"
+    d.mkdir(parents=True, exist_ok=True)
+    if os.name != "nt":
+        os.chmod(d, 0o700)
+    return d
+
+
 def _probe_dir() -> Path:
     jar = find_jar()
     h = hashlib.sha1(PROBE_SRC.read_bytes() + str(jar.stat().st_size).encode()).hexdigest()[:12]
-    return Path(tempfile.gettempdir()) / "logisim-toolkit-probe" / h
+    return cache_dir() / "probe" / h
 
 
 def _javac() -> str:
