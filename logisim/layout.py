@@ -488,7 +488,7 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
                 tree |= set(route._segment_points(a, b))
 
     if tunnels_needed:
-        _add_tunnels(circ, mc, project, grid, nets, placed, tunnels_needed, outward)
+        _add_tunnels(circ, mc, project, grid, nets, placed, tunnels_needed)
     errors = connectivity_errors(circ, project, mc)
     if errors:
         raise RuntimeError(f"layout of {circ.name!r} broke connectivity: " + "; ".join(errors))
@@ -522,7 +522,7 @@ def _check_unique_locations(mc: model.Circuit) -> None:
         seen[c.loc] = c
 
 
-def _add_tunnels(circ, mc, project, grid, nets, placed, needed, outward) -> None:
+def _add_tunnels(circ, mc, project, grid, nets, placed, needed) -> None:
     wiring = project.lib_id("wiring")
     used_names: set[str] = set()
     names: dict[int, str] = {}
@@ -530,46 +530,74 @@ def _add_tunnels(circ, mc, project, grid, nets, placed, needed, outward) -> None
     for i, t in needed:
         src, port, sinks = nets[i]
         if i not in names:
-            label = circ.net_labels.get((id(src.node), port))
-            if not label:
-                base = src.node.label or src.node.name.split()[0].lower()
-                label = base if src.node.primary == port else f"{base}_{port}"
-                label = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in label)
+            label = _net_name(circ, src, port, sinks)
             k, cand = 2, label
             while cand in used_names:
                 cand, k = f"{label}_{k}", k + 1
             used_names.add(cand)
             names[i] = cand
         if i not in done_driver:
-            _tunnel_at(mc, grid, wiring, placed[id(src.node)], port, names[i], i, outward)
+            _tunnel_at(mc, grid, wiring, placed[id(src.node)], port, names[i], i, branch=True)
             done_driver.add(i)
-        _tunnel_at(mc, grid, wiring, placed[id(t.node)], t.port, names[i], i, outward)
+        _tunnel_at(mc, grid, wiring, placed[id(t.node)], t.port, names[i], i, branch=False)
 
 
-def _tunnel_at(mc, grid, wiring, p: Placed, port: str, label: str, net: int, outward) -> None:
+def _net_name(circ: Circuit, src: Placed, port: str, sinks: list[Terminal]) -> str:
+    """Explicit name, else the driver's label, else the output pin the net feeds, else the
+    driver's port name ("q") or kind ("xor")."""
+    node = src.node
+    label = circ.net_labels.get((id(node), port))
+    if not label and node.label:
+        label = node.label if node.primary == port else f"{node.label}_{port}"
+    if not label:
+        label = next((t.node.label for t in sinks if t.node.role == "output" and t.node.label), "")
+    if not label:
+        label = port if port.isalpha() and port not in ("out", "p") else node.name.split()[0].lower()
+    return "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in label)
+
+
+_TUNNEL_FACING = {(G, 0): "west", (-G, 0): "east", (0, G): "north", (0, -G): "south"}
+_TUNNEL_OFFSETS = (0, 2, -2, 3, -3, 4, -4, 6, -6)  # grid steps sideways from the port's line
+
+
+def _grid_points(x: int, y: int, w: int, h: int) -> set[tuple[int, int]]:
+    x0, y0 = -(-x // G) * G, -(-y // G) * G
+    return {(gx, gy) for gx in range(x0, x + w + 1, G) for gy in range(y0, y + h + 1, G)}
+
+
+def _tunnel_at(mc, grid, wiring, p: Placed, port: str, label: str, net: int, *, branch: bool) -> None:
+    """Place a tunnel for `net` near p.port, at the first spot whose body touches no
+    component, wire or other tunnel and that the router can join with a short stub.
+    A sink stub must end at its port; a driver's (branch=True) may join its net's wires."""
     px, py = p.port_abs(port)
-    dx, dy = outward(p, port)
-    facing = {(G, 0): "west", (-G, 0): "east", (0, G): "north", (0, -G): "south"}[(dx, dy)]
+    out = port_side(p.shape, port)
+    side = (out[1], out[0])
+    attrs = {"facing": _TUNNEL_FACING[out], "label": label}
     width = p.shape.port(port).width
-    for stub in range(2, 12):
-        tx, ty = px + dx * stub, py + dy * stub
-        pts = [(px + dx * k, py + dy * k) for k in range(stub + 1)]
-        if any(grid.hard.get(q, net) != net or q in grid.blocked for q in pts[1:]):
-            continue
-        orient = "h" if dy == 0 else "v"
-        if any(orient in route._foreign_run(grid, q, net) for q in pts):
-            continue
-        if any(route._foreign_run(grid, q, net) for q in (pts[-1],)):
-            continue
-        mc.add_wire((px, py), (tx, ty))
-        grid.add_path([(px, py), (tx, ty)], net)
-        attrs = {"facing": facing, "label": label}
-        if width > 1:
-            attrs["width"] = str(width)
-        mc.add(model.Component("Tunnel", (tx, ty), attrs, wiring))
-        tb = geometry.FORMULAS[("#Wiring", "Tunnel")]("Tunnel", attrs).bounds
-        grid.block_rect(tx + tb[0], ty + tb[1], tb[2], tb[3], {(tx, ty)})
-        return
+    if width > 1:
+        attrs["width"] = str(width)
+    bx, by, bw, bh = geometry.FORMULAS[("#Wiring", "Tunnel")]("Tunnel", attrs).bounds
+    targets = grid.net_points(net) if branch else {(px, py)}
+    costs = route.Costs()
+    for off in _TUNNEL_OFFSETS:
+        for along in range(2, 9):
+            t = (px + out[0] * along + side[0] * off, py + out[1] * along + side[1] * off)
+            body = _grid_points(t[0] + bx, t[1] + by, bw, bh) | {t}
+            if any(q in grid.blocked or q in grid.hard or q in grid.run or not grid.inside(q) for q in body):
+                continue
+            added = body - {t}
+            grid.blocked |= added
+            limit = along + abs(off) + 2 * costs.bend + 2 * costs.near_body + 5
+            path = route.route(grid, net, t, targets, costs, start_dir=(-out[0], -out[1]), limit=limit)
+            if path is None or len(path) > 4:
+                grid.blocked -= added
+                continue
+            for a, b in route.segments(path):
+                mc.add_wire(a, b)
+            grid.add_path(path, net)
+            mc.add(model.Component("Tunnel", t, attrs, wiring))
+            grid.block_rect(t[0] + bx, t[1] + by, bw, bh, {t})
+            return
     raise RuntimeError(f"no room for a tunnel at {p.node!r}.{port}")
 
 

@@ -105,10 +105,11 @@ def _foreign_run(grid: Grid, p: Point, net: int) -> set[str]:
 
 
 def route(grid: Grid, net: int, start: Point, targets: set[Point], costs: Costs | None = None,
-          start_dir: tuple[int, int] | None = None) -> list[Point] | None:
+          start_dir: tuple[int, int] | None = None, limit: float | None = None) -> list[Point] | None:
     """Cheapest path from `start` to any point in `targets`, as corner points.
 
     `start_dir`, if given, forces the first step's direction (leave a port outward).
+    `limit` caps the path cost; None when nothing that cheap exists.
     """
     costs = costs or Costs()
     targets = set(targets) - {start}
@@ -190,6 +191,8 @@ def route(grid: Grid, net: int, start: Point, targets: set[Point], costs: Costs 
                         break
             ng = g + cost
             key = (q, nd)
+            if limit is not None and ng + h(q) > limit:
+                continue
             if ng < best.get(key, float("inf")):
                 best[key] = ng
                 prev[key] = (p, d)

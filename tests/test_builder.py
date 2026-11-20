@@ -46,15 +46,23 @@ def mux_register() -> Circuit:
     return c
 
 
-def counter2() -> Circuit:
-    c = Circuit("cnt2")
+def ripple_counter(n: int = 2, use_tunnels: bool = False) -> Circuit:
+    c = Circuit(f"cnt{n}", use_tunnels=use_tunnels)
     clk = c.input("clk")
-    ff0, ff1 = c.dff(None, clk), c.dff(None, clk)
-    c.connect(c.not_(ff0.q), ff0.D)
-    c.connect(c.xor(ff1.q, ff0.q), ff1.D)
-    c.output("Q0", ff0.q)
-    c.output("Q1", ff1.q)
+    ffs = [c.dff(None, clk) for _ in range(n)]
+    c.connect(c.not_(ffs[0].q), ffs[0].D)
+    carry = ffs[0].q
+    for i in range(1, n):
+        c.connect(c.xor(ffs[i].q, carry), ffs[i].D)
+        if i < n - 1:
+            carry = c.and_(carry, ffs[i].q)
+    for i, ff in enumerate(ffs):
+        c.output(f"Q{i}", ff.q)
     return c
+
+
+def counter2() -> Circuit:
+    return ripple_counter(2)
 
 
 CASES = {
@@ -64,6 +72,7 @@ CASES = {
     "adder4": adder4,
     "mux_register": lambda: Project(mux_register()),
     "counter2": lambda: Project(counter2()),
+    "counter4_tunnels": lambda: Project(ripple_counter(4, use_tunnels=True)),
 }
 
 
@@ -256,3 +265,31 @@ def test_circuit_names_logisim_would_rename_are_rejected():
         with pytest.raises(BuildError, match="renames"):
             Circuit(bad)
     Circuit("seq_harness")
+
+
+def _open_overlap(a, b) -> bool:
+    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+
+
+@pytest.mark.jar
+@pytest.mark.parametrize("name", CASES)
+def test_tunnels_clear_of_components_and_wires(tmp_path, name):
+    """Checked against the bounds Logisim itself reports, not our estimate."""
+    f = tmp_path / "c.circ"
+    CASES[name]().save(f)
+    for circ in jar.probe_ports(f)["circuits"]:
+        comps = circ["components"]
+        for t in (c for c in comps if c["name"] == "Tunnel"):
+            for c in comps:
+                assert c is t or not _open_overlap(t["bounds"], c["bounds"]), (circ["name"], t, c)
+            for x0, y0, x1, y1 in circ["wires"]:
+                if t["loc"] in ([x0, y0], [x1, y1]):
+                    continue  # the tunnel's own stub
+                seg =(min(x0, x1), min(y0, y1), abs(x1 - x0) or 1e-9, abs(y1 - y0) or 1e-9)
+                assert not _open_overlap(t["bounds"], seg), (circ["name"], t["loc"], (x0, y0, x1, y1))
+
+
+def test_tunnels_are_named_after_the_output_pins_they_feed():
+    model = Project(ripple_counter(4, use_tunnels=True)).to_model()
+    labels = {c.label for c in model.circuit("cnt4").find("Tunnel")}
+    assert {"Q0", "Q1", "Q2", "Q3"} <= labels and not any(lab.startswith("d") for lab in labels)

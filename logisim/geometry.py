@@ -235,10 +235,11 @@ def _tunnel(name: str, attrs: dict[str, str]) -> Shape:
     facing = _facing(attrs, "west")
     width = _width(attrs)
     label = attrs.get("label", "")
-    # Tunnel bounds depend on font metrics; this is an estimate (exact_bounds=False).
+    # Tunnel bounds depend on font metrics; this estimate (exact_bounds=False) contains
+    # the bounds Logisim 3.9 reports, e.g. "and_2" facing west is (0, -11, 48, 22).
     wd = max(10, 6 * len(label)) + 20
-    b = {"west": (0, -10, wd, 20), "east": (-wd, -10, wd, 20),
-         "north": (-wd // 2, 0, wd, 20), "south": (-wd // 2, -20, wd, 20)}[facing]
+    b = {"west": (0, -11, wd, 22), "east": (-wd, -11, wd + 1, 22),
+         "north": (-wd // 2, 0, wd, 24), "south": (-wd // 2, -24, wd, 24)}[facing]
     return Shape((Port("io", 0, 0, width, "inout"),), b, exact_bounds=False)
 
 
