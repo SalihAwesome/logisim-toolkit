@@ -165,6 +165,10 @@ class Circuit:
         node = Node(self, lib, name, {k: str(v) for k, v in attrs.items()}, role=role,
                     primary=primary, index=len(self.nodes))
         self.nodes.append(node)
+        if self._project is not None:
+            # the fallback port geometry of the project is built from the nodes
+            # of its circuits, so it has to be rebuilt when one of them grows
+            self._project._geom_model = None
         return node
 
     def _label(self, label: str, kind: str) -> str:
