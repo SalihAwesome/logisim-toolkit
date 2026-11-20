@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logisim-toolkit"
+version = "0.1.0"
+description = "Build, edit, lint and verify Logisim-evolution .circ files from Python"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.2"]
+test = ["pytest>=8"]
+
+[project.scripts]
+logisim-tool = "logisim.cli:main"
+logisim-mcp = "logisim_mcp.server:main"
+
+[tool.setuptools]
+packages = ["logisim", "logisim_mcp"]
+
+[tool.setuptools.package-data]
+logisim = ["java/*.java", "geometry_cache.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["jar: needs the Logisim JAR and Java 21+"]

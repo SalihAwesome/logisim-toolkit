@@ -1,0 +1,1366 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project source="3.9.0" version="1.0">
+  This file is intended to be loaded by Logisim-evolution v3.9.0(https://github.com/logisim-evolution/).
+
+  <lib desc="#Wiring" name="0">
+    <tool name="Pin">
+      <a name="appearance" val="classic"/>
+    </tool>
+  </lib>
+  <lib desc="#Gates" name="1"/>
+  <main name="main"/>
+  <options>
+    <a name="gateUndefined" val="ignore"/>
+    <a name="simlimit" val="1000"/>
+    <a name="simrand" val="0"/>
+  </options>
+  <mappings/>
+  <toolbar/>
+  <circuit name="s_logisim_evolution_true_221">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_true_221"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_true_318">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_true_318"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_true_141">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_true_141"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_true_531">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_true_531"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_true_021">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_true_021"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_false_221">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_false_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_false_318">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_false_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_false_141">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_false_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_false_531">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_false_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_false_021">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_false_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_None_221">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_None_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_None_318">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_None_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_None_141">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_None_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_None_531">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_None_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_logisim_evolution_None_021">
+    <a name="appearance" val="logisim_evolution"/>
+    <a name="circuit" val="s_logisim_evolution_None_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_true_221">
+    <a name="circuit" val="s_classic_true_221"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_true_318">
+    <a name="circuit" val="s_classic_true_318"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_true_141">
+    <a name="circuit" val="s_classic_true_141"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_true_531">
+    <a name="circuit" val="s_classic_true_531"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_true_021">
+    <a name="circuit" val="s_classic_true_021"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_false_221">
+    <a name="circuit" val="s_classic_false_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_false_318">
+    <a name="circuit" val="s_classic_false_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_false_141">
+    <a name="circuit" val="s_classic_false_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_false_531">
+    <a name="circuit" val="s_classic_false_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_false_021">
+    <a name="circuit" val="s_classic_false_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_None_221">
+    <a name="circuit" val="s_classic_None_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_None_318">
+    <a name="circuit" val="s_classic_None_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_None_141">
+    <a name="circuit" val="s_classic_None_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_None_531">
+    <a name="circuit" val="s_classic_None_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_None_021">
+    <a name="circuit" val="s_classic_None_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_true_221">
+    <a name="circuit" val="s_None_true_221"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_true_318">
+    <a name="circuit" val="s_None_true_318"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_true_141">
+    <a name="circuit" val="s_None_true_141"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_true_531">
+    <a name="circuit" val="s_None_true_531"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_true_021">
+    <a name="circuit" val="s_None_true_021"/>
+    <a name="circuitnamedboxfixedsize" val="true"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_false_221">
+    <a name="circuit" val="s_None_false_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_false_318">
+    <a name="circuit" val="s_None_false_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_false_141">
+    <a name="circuit" val="s_None_false_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_false_531">
+    <a name="circuit" val="s_None_false_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_false_021">
+    <a name="circuit" val="s_None_false_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_None_221">
+    <a name="circuit" val="s_None_None_221"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A0"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="A1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ao1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_None_318">
+    <a name="circuit" val="s_None_None_318"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="LONGNAME0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="LONGNAMEo0"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_None_141">
+    <a name="circuit" val="s_None_None_141"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="X0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo2"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Xo3"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_None_531">
+    <a name="circuit" val="s_None_None_531"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D4"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D3"/>
+    </comp>
+    <comp lib="0" loc="(100,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D2"/>
+      <a name="width" val="3"/>
+    </comp>
+    <comp lib="0" loc="(100,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D1"/>
+      <a name="width" val="2"/>
+    </comp>
+    <comp lib="0" loc="(100,260)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="D0"/>
+    </comp>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,180)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Do2"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_None_None_021">
+    <a name="circuit" val="s_None_None_021"/>
+    <comp lib="0" loc="(400,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko0"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(400,140)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="Ko1"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="s_classic_nsew">
+    <a name="circuit" val="s_classic_nsew"/>
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="p0"/>
+    </comp>
+    <comp lib="0" loc="(160,130)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="south"/>
+      <a name="label" val="p1"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(220,160)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="north"/>
+      <a name="label" val="p2"/>
+    </comp>
+    <comp lib="0" loc="(280,190)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="west"/>
+      <a name="label" val="p3"/>
+      <a name="output" val="true"/>
+    </comp>
+    <comp lib="0" loc="(340,220)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="facing" val="south"/>
+      <a name="label" val="p4"/>
+    </comp>
+    <comp lib="0" loc="(400,250)" name="Pin">
+      <a name="appearance" val="classic"/>
+      <a name="label" val="p5"/>
+      <a name="output" val="true"/>
+    </comp>
+  </circuit>
+  <circuit name="main">
+    <a name="circuit" val="main"/>
+    <a name="simulationFrequency" val="1.0"/>
+    <comp loc="(500,10200)" name="s_None_true_531"/>
+    <comp loc="(500,10500)" name="s_None_true_021"/>
+    <comp loc="(500,10800)" name="s_None_false_221"/>
+    <comp loc="(500,11100)" name="s_None_false_318"/>
+    <comp loc="(500,11400)" name="s_None_false_141"/>
+    <comp loc="(500,11700)" name="s_None_false_531"/>
+    <comp loc="(500,1200)" name="s_logisim_evolution_true_531"/>
+    <comp loc="(500,12000)" name="s_None_false_021"/>
+    <comp loc="(500,12300)" name="s_None_None_221"/>
+    <comp loc="(500,12600)" name="s_None_None_318"/>
+    <comp loc="(500,12900)" name="s_None_None_141"/>
+    <comp loc="(500,13200)" name="s_None_None_531"/>
+    <comp loc="(500,13500)" name="s_None_None_021"/>
+    <comp loc="(500,13800)" name="s_classic_nsew"/>
+    <comp loc="(500,1500)" name="s_logisim_evolution_true_021"/>
+    <comp loc="(500,1800)" name="s_logisim_evolution_false_221"/>
+    <comp loc="(500,2100)" name="s_logisim_evolution_false_318"/>
+    <comp loc="(500,2400)" name="s_logisim_evolution_false_141"/>
+    <comp loc="(500,2700)" name="s_logisim_evolution_false_531"/>
+    <comp loc="(500,300)" name="s_logisim_evolution_true_221"/>
+    <comp loc="(500,3000)" name="s_logisim_evolution_false_021"/>
+    <comp loc="(500,3300)" name="s_logisim_evolution_None_221"/>
+    <comp loc="(500,3600)" name="s_logisim_evolution_None_318"/>
+    <comp loc="(500,3900)" name="s_logisim_evolution_None_141"/>
+    <comp loc="(500,4200)" name="s_logisim_evolution_None_531"/>
+    <comp loc="(500,4500)" name="s_logisim_evolution_None_021"/>
+    <comp loc="(500,4800)" name="s_classic_true_221"/>
+    <comp loc="(500,5100)" name="s_classic_true_318"/>
+    <comp loc="(500,5400)" name="s_classic_true_141"/>
+    <comp loc="(500,5700)" name="s_classic_true_531"/>
+    <comp loc="(500,600)" name="s_logisim_evolution_true_318"/>
+    <comp loc="(500,6000)" name="s_classic_true_021"/>
+    <comp loc="(500,6300)" name="s_classic_false_221"/>
+    <comp loc="(500,6600)" name="s_classic_false_318"/>
+    <comp loc="(500,6900)" name="s_classic_false_141"/>
+    <comp loc="(500,7200)" name="s_classic_false_531"/>
+    <comp loc="(500,7500)" name="s_classic_false_021"/>
+    <comp loc="(500,7800)" name="s_classic_None_221"/>
+    <comp loc="(500,8100)" name="s_classic_None_318"/>
+    <comp loc="(500,8400)" name="s_classic_None_141"/>
+    <comp loc="(500,8700)" name="s_classic_None_531"/>
+    <comp loc="(500,900)" name="s_logisim_evolution_true_141"/>
+    <comp loc="(500,9000)" name="s_classic_None_021"/>
+    <comp loc="(500,9300)" name="s_None_true_221"/>
+    <comp loc="(500,9600)" name="s_None_true_318"/>
+    <comp loc="(500,9900)" name="s_None_true_141"/>
+  </circuit>
+</project>
