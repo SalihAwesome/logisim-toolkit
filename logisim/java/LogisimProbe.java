@@ -33,6 +33,7 @@ public class LogisimProbe {
     final var file = new Loader(null).openLogisimFile(new File(args[1]), Collections.emptyMap());
     switch (args[0]) {
       case "ports" -> ports(file);
+      case "nets" -> nets(file, args[2]);
       case "render" -> render(file, args[2], args[3], args.length > 4 ? Double.parseDouble(args[4]) : 1.0);
       default -> {
         System.err.println("unknown command " + args[0]);
@@ -97,6 +98,39 @@ public class LogisimProbe {
             .append(w.getEnd1().getX()).append(',').append(w.getEnd1().getY()).append(']');
       }
       out.append("]}");
+    }
+    out.append("]}");
+    System.out.println(out);
+  }
+
+  /** For every component end: the connected wire set Logisim sees there ("-" if no wire). */
+  private static void nets(LogisimFile file, String circName) {
+    final var circ = file.getCircuit(circName);
+    final var out = new StringBuilder("{\"ends\":[");
+    var first = true;
+    for (final Component comp : circ.getNonWires()) {
+      for (final EndData end : comp.getEnds()) {
+        final var loc = end.getLocation();
+        String key = "-";
+        final var here = circ.getWires(loc);
+        if (!here.isEmpty()) {
+          final var set = circ.getWireSet(here.iterator().next());
+          var min = (String) null;
+          for (final Wire w : circ.getWires()) {
+            if (set.containsWire(w)) {
+              final var s = String.format("%08d,%08d", w.getEnd0().getX() + 100000, w.getEnd0().getY() + 100000);
+              if (min == null || s.compareTo(min) < 0) min = s;
+            }
+          }
+          key = min;
+        }
+        if (!first) out.append(',');
+        first = false;
+        out.append("{\"comp\":").append(q(comp.getFactory().getName()))
+            .append(",\"loc\":[").append(comp.getLocation().getX()).append(',').append(comp.getLocation().getY())
+            .append("],\"end\":[").append(loc.getX()).append(',').append(loc.getY())
+            .append("],\"net\":").append(q(key)).append('}');
+      }
     }
     out.append("]}");
     System.out.println(out);

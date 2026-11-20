@@ -6,7 +6,9 @@ route for net N must never
   * pass through a component body,
   * run along (overlap) a wire of another net,
   * pass through another net's port, wire endpoint or bend,
-  * end or bend on another net's wire.
+  * end or bend on another net's wire,
+  * end where its own net already has three arms: Logisim merges the two straight
+    arms that meet there into one wire, which then only crosses the third (see netlist.py).
 Crossing another net's wire at a right angle is allowed but costs extra.
 """
 
@@ -45,6 +47,8 @@ class Grid:
     hard: dict[Point, int] = field(default_factory=dict)
     # point -> {net: orientation set} for wire interiors ("h", "v")
     run: dict[Point, dict[int, set[str]]] = field(default_factory=dict)
+    # point -> {net: directions its wires leave the point in}
+    arms: dict[Point, dict[int, set[tuple[int, int]]]] = field(default_factory=dict)
 
     def inside(self, p: Point) -> bool:
         return self.xmin <= p[0] <= self.xmax and self.ymin <= p[1] <= self.ymax
@@ -70,8 +74,13 @@ class Grid:
             self.hard[pts[i]] = net
         for a, b in zip(pts, pts[1:]):
             orient = "h" if a[1] == b[1] else "v"
-            for p in _segment_points(a, b):
+            seg = _segment_points(a, b)
+            for p in seg:
                 self.run.setdefault(p, {}).setdefault(net, set()).add(orient)
+            for p, q in zip(seg, seg[1:]):
+                step = (q[0] - p[0], q[1] - p[1])
+                self.arms.setdefault(p, {}).setdefault(net, set()).add(step)
+                self.arms.setdefault(q, {}).setdefault(net, set()).add((-step[0], -step[1]))
 
     def net_points(self, net: int) -> set[Point]:
         pts = {p for p, n in self.hard.items() if n == net}
@@ -133,8 +142,10 @@ def route(grid: Grid, net: int, start: Point, targets: set[Point], costs: Costs 
         if best.get((p, d), float("inf")) < g:
             continue
         if p in targets and p != start:
-            # cannot terminate on another net's wire interior
-            if turn_ok(p) or grid.hard.get(p) == net:
+            # cannot terminate on another net's wire interior, nor make a 4-way junction
+            own_arms = grid.arms.get(p, {}).get(net, set())
+            four_way = d is not None and len(own_arms | {(-d[0], -d[1])}) == 4
+            if (turn_ok(p) or grid.hard.get(p) == net) and not four_way:
                 path = [p]
                 key = (p, d)
                 while key in prev:
@@ -152,6 +163,8 @@ def route(grid: Grid, net: int, start: Point, targets: set[Point], costs: Costs 
                 continue
             if not ok_hard(q):
                 continue
+            if nd in grid.arms.get(p, {}).get(net, ()):
+                continue  # would retrace this net's own wire
             orient = "h" if nd[1] == 0 else "v"
             frun = _foreign_run(grid, q, net)
             if orient in frun:

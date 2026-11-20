@@ -16,6 +16,7 @@ project is converted to a model (`Project.to_model()` / `save()`), see layout.py
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Union
@@ -31,6 +32,13 @@ CONTROL_NAMES = {"clk", "clock", "reset", "rst", "clr", "clear", "en", "enable",
 
 class BuildError(ValueError):
     pass
+
+
+def valid_circuit_name(name: str) -> bool:
+    """Names Logisim 3.9 keeps as written. It renames others on load ("__x" becomes
+    "L_x_<hash>"), which breaks <main> and subcircuit references."""
+    return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", name)) and "__" not in name \
+        and not name.endswith("_")
 
 
 @dataclass(eq=False)
@@ -126,8 +134,9 @@ _GATE_NAMES = {"and": "AND Gate", "or": "OR Gate", "xor": "XOR Gate", "nand": "N
 class Circuit:
     def __init__(self, name: str, *, spacing: str = "roomy", use_tunnels: bool = False,
                  appearance: str = "logisim_evolution") -> None:
-        if not name or any(ch in name for ch in '<>&"'):
-            raise BuildError(f"bad circuit name {name!r}")
+        if not valid_circuit_name(name):
+            raise BuildError(f"bad circuit name {name!r}: Logisim renames it on load; use a letter, "
+                             "then letters, digits and single underscores, not ending in '_'")
         self.name = name
         self.spacing = spacing
         self.use_tunnels = use_tunnels
@@ -496,9 +505,13 @@ def rom_contents(addr_width: int, data_width: int, values: list[int]) -> str:
 class Project:
     """A set of builder circuits; the first one added is the main circuit."""
 
-    def __init__(self, *circuits: Circuit, main: str | None = None) -> None:
+    def __init__(self, *circuits: Circuit, main: str | None = None, base: model.Project | None = None) -> None:
+        """`base`: an existing model project (e.g. io.load(...)) whose circuits are kept and can
+        be instanced by the new circuits."""
         self.circuits: list[Circuit] = []
+        self.base = base
         self.main = main
+        self._explicit_main = main is not None
         self._geom_model: model.Project | None = None
         self._building: model.Project | None = None
         for c in circuits:
@@ -523,6 +536,8 @@ class Project:
         """
         if self._building is not None:
             return self._building
+        if self.base is not None:
+            return self.base
         if self._geom_model is None:
             p = model.Project.new()
             for c in self.circuits:
@@ -537,7 +552,11 @@ class Project:
         return self._geom_model
 
     def to_model(self) -> model.Project:
-        proj = model.Project.new()
+        proj = self.base.copy() if self.base is not None else model.Project.new()
+        for c in self.circuits:
+            if proj.has_circuit(c.name):
+                raise BuildError(f"circuit {c.name!r} already exists in the base project")
+        kept = len(proj.circuits)
         self._building = proj
         try:
             # subcircuits are laid out first; their final pin positions fix the instance ports
@@ -546,8 +565,9 @@ class Project:
         finally:
             self._building = None
         order = {c.name: i for i, c in enumerate(self.circuits)}
-        proj.circuits.sort(key=lambda mc: order[mc.name])
-        proj.main = self.main
+        proj.circuits[kept:] = sorted(proj.circuits[kept:], key=lambda mc: order[mc.name])
+        if self.base is None or self._explicit_main or not proj.main:
+            proj.main = self.main
         return proj
 
     def save(self, path: str | os.PathLike, *, overwrite: bool = False) -> Path:

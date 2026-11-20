@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from logisim import io, jar, netlist
+from logisim import io, jar, netlist, route
 from logisim.builder import BuildError, Circuit, Project
 from logisim.layout import connectivity_errors
 from logisim.model import Component, Project as ModelProject
@@ -46,12 +46,24 @@ def mux_register() -> Circuit:
     return c
 
 
+def counter2() -> Circuit:
+    c = Circuit("cnt2")
+    clk = c.input("clk")
+    ff0, ff1 = c.dff(None, clk), c.dff(None, clk)
+    c.connect(c.not_(ff0.q), ff0.D)
+    c.connect(c.xor(ff1.q, ff0.q), ff1.D)
+    c.output("Q0", ff0.q)
+    c.output("Q1", ff1.q)
+    return c
+
+
 CASES = {
     "full_adder": lambda: Project(full_adder()),
     "full_adder_compact": lambda: Project(full_adder("compact")),
     "full_adder_tunnels": lambda: Project(full_adder(use_tunnels=True)),
     "adder4": adder4,
     "mux_register": lambda: Project(mux_register()),
+    "counter2": lambda: Project(counter2()),
 }
 
 
@@ -161,3 +173,86 @@ def test_full_adder_truth_table_in_logisim(tmp_path):
         a, b, c = int(r["A"]), int(r["B"]), int(r["Cin"])
         assert int(r["S"]) == a ^ b ^ c
         assert int(r["Cout"]) == (a + b + c) // 2
+
+
+def _ours(proj, name):
+    """Our netlist as a partition of component ends, each end keyed by (component loc, end loc)."""
+    circ = proj.circuit(name)
+    nl = netlist.extract(proj, circ)
+    groups: dict = {}
+    for (ci, port), nid in nl.port_net.items():
+        comp = circ.components[ci]
+        pos = next(p.pos for p in netlist.geometry.ports(proj, comp) if p.name == port)
+        groups.setdefault(nid, set()).add((comp.loc, pos))
+    return {frozenset(g) for g in groups.values()}
+
+
+def _logisims(proj, f, name):
+    """The same partition as Logisim sees it: wire sets, joined by touching ends and tunnel labels."""
+    tunnel_label = {c.loc: c.label for c in proj.circuit(name).components if c.name == "Tunnel"}
+    uf = netlist.UnionFind()
+    keys = []
+    for e in jar.probe_nets(f, name):
+        key = (tuple(e["loc"]), tuple(e["end"]))
+        keys.append(key)
+        uf.union(key, ("pt", key[1]))
+        if e["net"] != "-":
+            uf.union(key, ("wires", e["net"]))
+        if e["comp"] == "Tunnel":
+            uf.union(key, ("tunnel", tunnel_label[key[0]]))
+    groups: dict = {}
+    for k in keys:
+        groups.setdefault(uf.find(k), set()).add(k)
+    return {frozenset(g) for g in groups.values()}
+
+
+@pytest.mark.jar
+@pytest.mark.parametrize("name", CASES)
+def test_netlist_matches_logisim_connectivity(tmp_path, name):
+    f = tmp_path / "c.circ"
+    CASES[name]().save(f)
+    proj = io.load(f)
+    for circ in proj.circuits:
+        assert _ours(proj, circ.name) == _logisims(proj, f, circ.name), circ.name
+
+
+STUB_PINS = [((100, 100), "A", False), ((300, 100), "Y1", True), ((200, 50), "Y2", True), ((200, 150), "Y3", True)]
+
+
+def test_netlist_collinear_stubs_inside_a_wire_do_not_connect():
+    proj, circ = _pins_project([((100, 100), (300, 100)), ((200, 50), (200, 100)), ((200, 100), (200, 150))],
+                               STUB_PINS)
+    nl = netlist.extract(proj, circ)
+    net = [nl.port_net[(i, "p")] for i in range(4)]
+    assert net[0] == net[1] and net[2] == net[3] and net[0] != net[2]
+
+
+def test_netlist_four_wire_ends_at_one_point_connect():
+    proj, circ = _pins_project([((100, 100), (200, 100)), ((200, 100), (300, 100)),
+                                ((200, 50), (200, 100)), ((200, 100), (200, 150))], STUB_PINS)
+    nl = netlist.extract(proj, circ)
+    assert len({nl.port_net[(i, "p")] for i in range(4)}) == 1
+
+
+def test_router_does_not_end_in_a_four_way_crossing():
+    # net 0 has a wire along y=100 and a stub from above ending on it at x=200; a sink
+    # straight below must join elsewhere, or Logisim merges the two stubs into a crossing
+    grid = route.Grid(0, 0, 400, 300)
+    tree_paths = [[(100, 100), (300, 100)], [(200, 50), (200, 100)]]
+    for pts in tree_paths:
+        grid.add_path(pts, 0)
+    targets = grid.net_points(0)
+    path = route.route(grid, 0, (200, 150), targets, start_dir=(0, -10))
+    assert path is not None and path[-1] in targets and path[-1] != (200, 100)
+    wires = [seg for pts in tree_paths + [path] for seg in route.segments(pts)]
+    proj, circ = _pins_project(wires, [((100, 100), "A", False), ((200, 50), "Y1", True),
+                                       ((200, 150), "Y2", True)])
+    nl = netlist.extract(proj, circ)
+    assert len({nl.port_net[(i, "p")] for i in range(3)}) == 1
+
+
+def test_circuit_names_logisim_would_rename_are_rejected():
+    for bad in ("__harness", "_a", "a_", "a__b", "1a", "a b", "a-b"):
+        with pytest.raises(BuildError, match="renames"):
+            Circuit(bad)
+    Circuit("seq_harness")

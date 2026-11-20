@@ -44,3 +44,20 @@ def test_crossing_wires_do_not_connect(tmp_path):
                    ((200, 50), "B", False), ((200, 250), "YB", True)])
     assert all(r["YA"] == r["A"] and r["YB"] == r["B"] for r in rows)
     assert any(r["A"] != r["B"] for r in rows)
+
+
+STUB_PINS = [((100, 100), "A", False), ((300, 100), "Y1", True),
+             ((200, 50), "Y2", True), ((200, 150), "Y3", True)]
+
+
+def test_collinear_stubs_meeting_inside_a_wire_do_not_connect_to_it(tmp_path):
+    # Logisim merges the two stubs into one wire that merely crosses A's wire
+    rows = _table(tmp_path, [((100, 100), (300, 100)), ((200, 50), (200, 100)), ((200, 100), (200, 150))],
+                  STUB_PINS)
+    assert all(r["A"] == r["Y1"] and r["Y2"] == r["Y3"] == "U" for r in rows)
+
+
+def test_four_wire_ends_at_one_point_connect(tmp_path):
+    rows = _table(tmp_path, [((100, 100), (200, 100)), ((200, 100), (300, 100)),
+                             ((200, 50), (200, 100)), ((200, 100), (200, 150))], STUB_PINS)
+    assert all(r["A"] == r["Y1"] == r["Y2"] == r["Y3"] for r in rows)

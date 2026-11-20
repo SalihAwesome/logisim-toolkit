@@ -211,3 +211,12 @@ def normalize(circ_in: str | os.PathLike, circ_out: str | os.PathLike) -> RunRes
     if not Path(circ_out).exists():
         raise LogisimError(f"Logisim could not load/re-save {circ_in}:\n{r.output}")
     return r
+
+
+def probe_nets(circ_file: str | os.PathLike, circuit: str) -> list[dict]:
+    """Logisim's own connectivity: for each component end, an id of the wire set touching it."""
+    r = run_probe(["nets", str(circ_file), circuit])
+    line = next((ln for ln in r.stdout.splitlines() if ln.startswith("{")), None)
+    if r.returncode != 0 or line is None:
+        raise LogisimError(f"probe failed on {circ_file}:\n{r.output}")
+    return json.loads(line)["ends"]

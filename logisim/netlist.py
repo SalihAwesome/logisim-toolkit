@@ -4,6 +4,10 @@ Connectivity rules, confirmed against the Logisim JAR (see tests/test_jar_rules.
   * wires whose endpoints coincide are connected;
   * a wire endpoint or a component port lying on another wire's interior connects to it;
   * two wires that merely cross (interior to interior) are NOT connected;
+  * on load Logisim merges collinear wires (WireRepair), so a point where only wires of
+    one orientation end, with wire on both sides of it, vanishes: a perpendicular wire
+    passing through it only crosses. Two stubs meeting from opposite sides at a point
+    inside another wire therefore do not connect to that wire;
   * tunnels with the same label are connected.
 """
 
@@ -124,6 +128,21 @@ def wires_through(circ: Circuit, p: Point, horiz=None, vert=None) -> list[int]:
     return out
 
 
+def _merged_orientation(circ: Circuit, pt: Point, ends: list[int], through: list[int]) -> bool | None:
+    """If Logisim's collinear merge erases connection point `pt`, the merged wires'
+    orientation (True for horizontal), else None. `pt` must carry no component end."""
+    if not ends:
+        return None
+    horizontal = circ.wires[ends[0]].horizontal
+    if any(circ.wires[i].horizontal != horizontal for i in ends):
+        return None
+    axis = 0 if horizontal else 1
+    along = [circ.wires[i] for i in through if circ.wires[i].horizontal == horizontal]
+    lo = any(min(w.a[axis], w.b[axis]) < pt[axis] for w in along)
+    hi = any(max(w.a[axis], w.b[axis]) > pt[axis] for w in along)
+    return horizontal if lo and hi else None
+
+
 def component_ports(project: Project, circ: Circuit) -> tuple[list[list[Port]], list[int]]:
     all_ports: list[list[Port]] = []
     unknown: list[int] = []
@@ -146,11 +165,17 @@ def extract(project: Project, circ: Circuit | str) -> Netlist:
     for i, w in enumerate(circ.wires):
         uf.union(("w", i), w.a)
         uf.union(("w", i), w.b)
-    points = {w.a for w in circ.wires} | {w.b for w in circ.wires}
-    points |= {p.pos for ps in all_ports for p in ps}
-    for pt in points:
-        for i in wires_through(circ, pt, horiz, vert):
-            uf.union(("w", i), pt)
+    ends: dict[Point, list[int]] = defaultdict(list)
+    for i, w in enumerate(circ.wires):
+        ends[w.a].append(i)
+        ends[w.b].append(i)
+    port_points = {p.pos for ps in all_ports for p in ps}
+    for pt in set(ends) | port_points:
+        through = wires_through(circ, pt, horiz, vert)
+        merged = None if pt in port_points else _merged_orientation(circ, pt, ends[pt], through)
+        for i in through:
+            if merged is None or circ.wires[i].horizontal == merged:
+                uf.union(("w", i), pt)
 
     tunnels: dict[str, list[Point]] = defaultdict(list)
     for ci, c in enumerate(circ.components):
