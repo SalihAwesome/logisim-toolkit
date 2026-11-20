@@ -13,6 +13,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collections;
+import java.util.Locale;
 import javax.imageio.ImageIO;
 
 /**
@@ -51,7 +52,7 @@ public class LogisimProbe {
         case '\\' -> b.append("\\\\");
         case '\n' -> b.append("\\n");
         default -> {
-          if (ch < 0x20) b.append(String.format("\\u%04x", (int) ch));
+          if (ch < 0x20) b.append(String.format(Locale.ROOT, "\\u%04x", (int) ch));
           else b.append(ch);
         }
       }
@@ -118,7 +119,7 @@ public class LogisimProbe {
           var min = (String) null;
           for (final Wire w : circ.getWires()) {
             if (set.containsWire(w)) {
-              final var s = String.format("%08d,%08d", w.getEnd0().getX() + 100000, w.getEnd0().getY() + 100000);
+              final var s = String.format(Locale.ROOT, "%08d,%08d", w.getEnd0().getX() + 100000, w.getEnd0().getY() + 100000);
               if (min == null || s.compareTo(min) < 0) min = s;
             }
           }
