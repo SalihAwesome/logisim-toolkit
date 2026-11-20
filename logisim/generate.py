@@ -1740,7 +1740,8 @@ def simulate_fsm(fsm: FSM, steps: Sequence[Mapping[str, int]]) -> list[dict[str,
     states: list[str] = []
     state = fsm.initial
     for step in steps:
-        state = fsm.next_state(state, {k: int(v) for k, v in step.items()})
+        values = {k: int(v) for k, v in step.items()}
+        state = fsm.next_state(state, values, reset=fsm.reset and bool(values.get("rst", 0)))
         states.append(state)
     out = []
     for k, state in enumerate(states):
