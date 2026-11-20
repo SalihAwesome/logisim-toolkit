@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import shutil
 import tempfile
-from collections import Counter
 from dataclasses import asdict, replace
 from functools import wraps
 from pathlib import Path, PureWindowsPath
@@ -24,7 +22,7 @@ except ModuleNotFoundError as exc:
     from mcp.server.fastmcp import FastMCP as MCPServer
     from mcp.server.fastmcp.exceptions import ToolError
 
-from logisim import builder, edit, generate, io, jar, lint, model, netlist, sim
+from logisim import builder, edit, generate, io, jar, lint, model, report, sim
 
 _EXTENSIONS = frozenset({".circ", ".txt", ".csv", ".png"})
 _ERRORS = (ValueError, KeyError, OSError, sim.SimError, jar.LogisimError)
@@ -52,20 +50,6 @@ def _tool(function):
 
 def _select(project: model.Project, circuit: str | None) -> model.Circuit:
     return project.main_circuit if circuit is None else project.circuit(circuit)
-
-
-def _describe(project: model.Project, circuit: model.Circuit) -> dict:
-    return {
-        "circuit": circuit.name,
-        "pins": [
-            {"label": pin.label, "width": int(pin.get("width", "1")), "direction": direction}
-            for direction, pins in (("input", circuit.inputs()), ("output", circuit.outputs()))
-            for pin in pins
-        ],
-        "component_counts": dict(Counter(comp.name for comp in circuit.components)),
-        "subcircuits": sorted({comp.name for comp in circuit.components if project.is_subcircuit(comp)}),
-        "net_count": len(netlist.extract(project, circuit).nets),
-    }
 
 
 def _issues(issues: list[lint.Issue]) -> list[dict]:
@@ -235,36 +219,18 @@ _BLOCKS = {
 }
 
 
-def _target(project: model.Project, circuit: model.Circuit, target: str | int) -> str | int:
-    occurrence = re.fullmatch(r"(.+)#([0-9]+)", target) if isinstance(target, str) else None
-    if occurrence is None or edit.find_components(project, circuit, label=target):
-        return target
-    name, index = occurrence[1], int(occurrence[2])
-    matches = edit.find_components(project, circuit, name=name)
-    if index >= len(matches):
-        raise edit.EditError(f"no component {target!r} in {circuit.name!r}")
-    return matches[index].index
-
-
-def _port_ref(project: model.Project, circuit: model.Circuit, ref, *, net: bool = False):
+def _port_ref(ref):
+    """A target (label, index, type or "Type#N") or a [target, port] pair."""
     if not isinstance(ref, (list, tuple)):
-        return _target(project, circuit, ref)
+        return ref
     if len(ref) != 2 or not isinstance(ref[1], str):
         raise edit.EditError("use [target, port] for a port reference")
-    target = _target(project, circuit, ref[0])
-    if net and isinstance(target, str):
-        matches = edit.find_components(project, circuit, label=target)
-        if not matches:
-            matches = edit.find_components(project, circuit, name=target)
-        if len(matches) != 1:
-            raise edit.EditError(f"expected one component for {target!r}, found {len(matches)}")
-        target = matches[0].index
-    return target, ref[1]
+    return tuple(ref)
 
 
-def _connection_refs(project: model.Project, circuit: model.Circuit, connections) -> dict:
+def _connection_refs(connections) -> dict:
     pairs = connections.items() if isinstance(connections, dict) else connections
-    return {port: _port_ref(project, circuit, ref) for port, ref in pairs}
+    return {port: _port_ref(ref) for port, ref in pairs}
 
 
 def _wire_endpoints(value):
@@ -419,9 +385,9 @@ class WorkspaceTools:
 
     @_tool
     def describe_circuit(self, file: str, circuit: str | None = None) -> dict[str, Any]:
-        """Describe one circuit (main by default). Returns pin labels, widths and directions, component counts, subcircuits and net count."""
+        """Describe one circuit (main by default). Returns its name, input and output pins (label, width, direction), component and gate counts, subcircuits used, and net and wire counts."""
         project = self._project(self._circ_file(file))
-        return _describe(project, _select(project, circuit))
+        return report.describe(project, _select(project, circuit))
 
     @_tool
     def lint_circuit(self, file: str, circuit: str | None = None, errors_only: bool = False) -> list[dict]:
@@ -567,16 +533,14 @@ class WorkspaceTools:
                 library = args["lib"]
                 if project.library(library) is None and library not in _BUILTIN_LIBS:
                     raise ValueError(f"unknown built-in library: {library!r}")
-            if "target" in args:
-                args["target"] = _target(project, circuit, args["target"])
             for key in ("net", "driver"):
                 if args.get(key) is not None:
-                    args[key] = _port_ref(project, circuit, args[key], net=key == "net")
+                    args[key] = _port_ref(args[key])
             if args.get("sinks") is not None:
-                args["sinks"] = [_port_ref(project, circuit, ref) for ref in args["sinks"]]
+                args["sinks"] = [_port_ref(ref) for ref in args["sinks"]]
             for key in ("connections", "extra_inputs"):
                 if args.get(key) is not None:
-                    args[key] = _connection_refs(project, circuit, args[key])
+                    args[key] = _connection_refs(args[key])
             if op == "delete_wires":
                 if args.get("point") is not None:
                     args["point"] = tuple(args["point"])

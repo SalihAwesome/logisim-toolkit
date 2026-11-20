@@ -46,7 +46,7 @@ def tools(tmp_path):
 def test_workspace_paths(tools):
     workspace = tools.workspace
     assert tools.describe_circuit("fa.circ") == tools.describe_circuit(str(workspace / "fa.circ"))
-    assert tools.describe_circuit("inner/../fa.circ")["circuit"] == "full_adder"
+    assert tools.describe_circuit("inner/../fa.circ")["name"] == "full_adder"
     Project(full_adder()).save(workspace.parent / "outside.circ")
     for path in ("../outside.circ", str(workspace.parent / "outside.circ")):
         with pytest.raises(ToolError, match="outside the workspace"):
@@ -130,11 +130,9 @@ def test_list_describe_and_lint(tools):
         "path": "fa.circ", "circuits": ["full_adder"], "main": "full_adder",
     }
     description = tools.describe_circuit("fa.circ", "full_adder")
-    assert description["pins"] == [
-        {"label": pin, "width": 1, "direction": direction}
-        for direction, pins in [("input", ["A", "B", "Cin"]), ("output", ["S", "Cout"])]
-        for pin in pins
-    ]
+    for direction, pins in [("input", ["A", "B", "Cin"]), ("output", ["S", "Cout"])]:
+        assert description[direction + "s"] == [
+            {"label": pin, "width": 1, "direction": direction} for pin in pins]
     assert description["component_counts"]["AND Gate"] == 2
     assert description["net_count"] > 0
     assert description["subcircuits"] == []
@@ -241,7 +239,7 @@ def test_stdio(tools):
                 describe = await session.call_tool("describe_circuit", {"file": "fa.circ"})
                 result = describe.model_dump(by_alias=True)
                 assert not result["isError"], describe.content
-                assert result["structuredContent"]["circuit"] == "full_adder"
+                assert result["structuredContent"]["name"] == "full_adder"
                 linted = await session.call_tool("lint_circuit", {"file": "fa.circ", "errors_only": True})
                 result = linted.model_dump(by_alias=True)
                 assert not result["isError"], linted.content

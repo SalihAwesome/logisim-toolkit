@@ -19,7 +19,7 @@ keep a `.bak` copy.
 | Tool | What it does |
 | --- | --- |
 | `list_circuits` | Lists project files recursively or circuit names in one project |
-| `describe_circuit` | Returns pins, component counts, subcircuits and net count |
+| `describe_circuit` | Returns pins, component and gate counts, subcircuits, net and wire counts |
 | `lint_circuit` | Returns project or circuit issues, optionally errors only |
 | `truth_table` | Runs a combinational truth table with a maximum row count |
 | `run_tests` | Runs a Logisim `.txt` test-vector file |

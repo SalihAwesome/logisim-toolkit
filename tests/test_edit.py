@@ -747,3 +747,18 @@ def test_jar_verify_after_renaming_a_pin(tmp_path):
     r = sim.verify(path, lambda A, B, Cin: {"S": (A + B + Cin) % 16,
                                              "Cout": (A + B + Cin) // 16})
     assert r.ok and r.passed == 512, r.report()
+
+
+def test_type_occurrence_targets_and_named_net():
+    """"AND Gate#1" is the second AND gate; insert_gate takes (label, port) for its net."""
+    project = fa_project()
+    circuit = project.circuit("full_adder")
+    ands = edit.find_components(project, circuit, name="AND Gate")
+    assert len(ands) == 2
+    info = edit.rotate_component(project, circuit, "AND Gate#1", facing="south")
+    assert info.index == ands[1].index
+    with pytest.raises(edit.EditError, match="out of range"):
+        edit.rotate_component(project, circuit, "AND Gate#5")
+    before = len(circuit.components)
+    edit.insert_gate(project, circuit, ("S", "p"))
+    assert len(circuit.components) == before + 1

@@ -837,6 +837,7 @@ def truth_table_from_csv(source: str | os.PathLike, *,
         cut = header.index("|")
         in_names = header[:cut]
         out_names = header[cut + 1:]
+        header = in_names + out_names
     elif outputs is not None:
         out_names = [str(o) for o in outputs]
         in_names = [h for h in header if h not in out_names]
@@ -844,24 +845,26 @@ def truth_table_from_csv(source: str | os.PathLike, *,
         raise TruthTableError("say which columns are outputs: pass `outputs=` or use a '|' column")
     if not in_names:
         raise TruthTableError("the truth table has no input columns")
-    if outputs is not None and "|" not in header:
-        out_names = [str(o) for o in outputs]
-    n_in, n_out = len(in_names), len(out_names)
+    positions = {name: i for i, name in enumerate(header)}
+    if len(positions) != len(header) or len(set(out_names)) != len(out_names):
+        raise TruthTableError("the truth table has duplicate column names")
+    for name in out_names:
+        if name not in positions:
+            raise TruthTableError(f"output column {name!r} is not in the header")
     rows: dict[tuple[int, ...], list[int | None]] = {}
     for lineno, line in enumerate(lines[1:], start=2):
         cells = _split_cells(line)
         if "|" in cells:
             cells = [c for c in cells if c != "|"]
-        if len(cells) != n_in + n_out:
-            raise TruthTableError(f"row {lineno}: expected {n_in + n_out} cells, got {len(cells)}")
+        if len(cells) != len(header):
+            raise TruthTableError(f"row {lineno}: expected {len(header)} cells, got {len(cells)}")
         assign = []
-        for i, name in enumerate(in_names):
-            v = _cell_value(cells[i], f"row {lineno}, column {name}")
+        for name in in_names:
+            v = _cell_value(cells[positions[name]], f"row {lineno}, column {name}")
             if v is None:
                 raise TruthTableError(f"row {lineno}, column {name}: an input cannot be a don't care")
             assign.append(v)
-        vals = [_cell_value(cells[n_in + i], f"row {lineno}, column {out_names[i]}")
-                for i in range(n_out)]
+        vals = [_cell_value(cells[positions[name]], f"row {lineno}, column {name}") for name in out_names]
         rows[tuple(assign)] = vals
     return TruthTable(in_names, out_names, _complete_rows(rows, in_names, out_names))
 

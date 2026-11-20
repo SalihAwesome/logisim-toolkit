@@ -17,8 +17,8 @@ test = ["pytest>=8"]
 logisim-tool = "logisim.cli:main"
 logisim-mcp = "logisim_mcp.server:main"
 
-[tool.setuptools]
-packages = ["logisim", "logisim_mcp"]
+[tool.setuptools.packages.find]
+include = ["logisim", "logisim_mcp"]
 
 [tool.setuptools.package-data]
 logisim = ["java/*.java", "geometry_cache.json"]

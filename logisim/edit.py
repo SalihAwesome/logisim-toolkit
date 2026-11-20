@@ -52,6 +52,7 @@ from __future__ import annotations
 
 import copy
 import itertools
+import re
 import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -150,7 +151,15 @@ def _index_of(circ: Circuit, target) -> int:
             return by_name[0]
         if len(by_name) > 1:
             raise EditError(f"several components are named {target!r} in {circ.name!r}; "
-                            "use an index or a label")
+                            f"use an index, a label or {target}#N (the Nth one, from 0)")
+        occurrence = re.fullmatch(r"(.+)#([0-9]+)", target)
+        if occurrence:
+            of_type = [i for i, c in enumerate(circ.components) if c.name == occurrence[1]]
+            n = int(occurrence[2])
+            if n < len(of_type):
+                return of_type[n]
+            raise EditError(f"{circ.name!r} has {len(of_type)} components named "
+                            f"{occurrence[1]!r}; {target!r} is out of range")
         raise EditError(f"no component labelled or named {target!r} in {circ.name!r}")
     raise EditError(f"cannot use {target!r} as a component reference")
 
@@ -985,10 +994,7 @@ def _net_for(project: Project, circ: Circuit, net):
             if n.id == net.id or n is net:
                 return nl, n
         raise EditError("that net does not belong to this circuit")
-    if isinstance(net, tuple) and len(net) == 2:
-        ci, port = net
-    else:
-        ci, port, _ = _resolve_port(project, circ, net)
+    ci, port, _ = _resolve_port(project, circ, net)
     nid = nl.port_net.get((ci, port))
     if nid is None:
         raise EditError(f"no net found at component {ci} port {port!r}")
@@ -1427,7 +1433,9 @@ def _merge_collinear(a: Wire, b: Wire, pt: Point) -> Wire | None:
 
 def _unique_circuit_name(base: str, taken: set[str], prefix: str | None) -> str:
     stem = (prefix or "") + base
-    if builder.valid_circuit_name(stem) and stem not in taken:
+    if not builder.valid_circuit_name(stem):
+        raise EditError(f"bad circuit name {stem!r} from merge prefix {prefix!r}")
+    if stem not in taken:
         return stem
     for k in itertools.count(1):
         candidate = stem + ("_copy" if k == 1 else f"_copy{k}")
