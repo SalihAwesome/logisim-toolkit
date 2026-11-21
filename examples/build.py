@@ -110,7 +110,7 @@ def traffic_light() -> Example:
 
 
 def counter() -> Example:
-    project = generate.counter(4, spacing="normal")
+    project = generate.counter(4)
     # Count from 1 through 15 to 0, then check hold and synchronous clear.
     count = {"en": 1, "clr": 0}
     steps = [count] * 17 + [{"en": 0, "clr": 0},

@@ -1402,8 +1402,10 @@ def counter(width: int = 4, *, clear: str = "sync", spacing: str = "roomy",
     proj = Project(bit, top, main="counter")
     q = bit.input("q")
     carry = bit.input("carry")
-    clrn = bit.input("clrn")
-    d = bit.and_(bit.xor(q, carry), clrn)
+    bit_clr = bit.input("clr", control=False)
+    # d = (q ^ carry) & ~clr, with the inversion as a negated AND input so
+    # the top level needs no inverter between the clr pin and the cells.
+    d = bit.and_(bit.xor(q, carry), bit_clr, negate=(1,))
     bit.output("d", d)
     bit.output("cout", bit.and_(carry, q))
 
@@ -1411,14 +1413,14 @@ def counter(width: int = 4, *, clear: str = "sync", spacing: str = "roomy",
     en = top.input("en")
     clr = top.input("clr")
     if clear == "sync":
-        clrn: Signal = top.not_(clr)
+        cell_clr: Signal = clr
         ffs = [top.dff(None, clk) for _ in range(width)]
     else:
-        clrn = top.const(1)
+        cell_clr = top.const(0)
         ffs = [top.dff(None, clk, reset=clr) for _ in range(width)]
     chain: Signal = en
     for i in range(width):
-        unit = top.instance(bit, q=ffs[i].q, carry=chain, clrn=clrn)
+        unit = top.instance(bit, q=ffs[i].q, carry=chain, clr=cell_clr)
         top.connect(unit.d, ffs[i].D)
         chain = unit.cout
     top.output("Q", top.merge([f.q for f in ffs]), width=width)

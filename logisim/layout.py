@@ -117,10 +117,19 @@ def _layers(circ: Circuit) -> dict[int, int]:
                 preds[id(n)].append(src.node)
                 succs[source].append(n)
 
-    # Remove feedback: DFS from sources, drop back edges.
+    # Remove feedback: DFS from sources, drop back edges. Clocked elements are
+    # tried last as roots, so a loop through one breaks on the edge out of it.
     back: set[tuple[int, int]] = set()
     state: dict[int, int] = {}
-    order = sorted(nodes, key=lambda n: (0 if n.role == "input" else 1 if not preds[id(n)] else 2, n.index))
+
+    def root_rank(n: Node) -> int:
+        if n.role == "input":
+            return 0
+        if not preds[id(n)]:
+            return 1
+        return 3 if any(logical_port(n, p) == "clk" for p in n.inputs) else 2
+
+    order = sorted(nodes, key=lambda n: (root_rank(n), n.index))
     for root in order:
         if id(root) in state:
             continue
@@ -172,10 +181,13 @@ def _layers(circ: Circuit) -> dict[int, int]:
         depth(n)
     logic_max = max((layer[id(n)] for n in nodes if n.role not in ("input", "output")), default=0)
     output_only = output_drivers - other_drivers
+    feedback_drivers = {src for src, _ in back}
     # Pull sources and early nodes right, next to their first consumer.
     # Output-only drivers go immediately before the shared output column.
+    # A node that drives a feedback edge (a flip-flop's Q back into its
+    # next-state logic) stays beside that logic, so the loop stays short.
     for n in sorted(nodes, key=lambda n: -layer[id(n)]):
-        if n.role in ("input", "output"):
+        if n.role in ("input", "output") or id(n) in feedback_drivers:
             continue
         ss = [layer[id(s)] for s in fsuccs.get(id(n), []) if s.role != "output"]
         if ss:
