@@ -178,3 +178,16 @@ def test_report_format():
     text = lint.report(lint.lint(proj))
     assert text.splitlines()[0] == "1 error"
     assert "main: error [width-mismatch] at (100,100): bit widths differ" in text
+
+
+def test_labels_matching_ignoring_case_are_an_error():
+    proj = _circ([((100, 100), "ACC", True, 4)],
+                 comps=[("memory", "Register", (300, 100), {"label": "acc", "width": "4"})])
+    assert ("duplicate-label", "error") in {(i.code, i.severity) for i in lint.lint(proj)}
+
+
+def test_tunnel_label_matching_a_pin_label_is_fine():
+    proj = _circ([((100, 100), "t", False, 1)],
+                 comps=[("wiring", "Tunnel", (200, 100), {"label": "T"}),
+                        ("wiring", "Tunnel", (200, 200), {"label": "T"})])
+    assert "duplicate-label" not in codes(proj)

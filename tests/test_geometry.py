@@ -66,3 +66,19 @@ def test_subcircuit_ports_match_logisim(inst):
         [(e["loc"][0] - x, e["loc"][1] - y, e["width"], e["type"]) for e in inst["ends"]]
     b = inst["bounds"]
     assert s.bounds == (b[0] - x, b[1] - y, b[2], b[3])
+
+
+# Bounds of tunnels as Logisim 3.9 draws them (SansSerif bold 16 label), measured from
+# rendered pixels relative to the tunnel's location. Logisim's own pre-paint bounds are smaller.
+DRAWN_TUNNELS = [
+    ("east", "MUL_EN", (-76, -14, 78, 29)), ("east", "WWWWWW", (-99, -14, 101, 29)),
+    ("east", "INIT", (-39, -14, 41, 29)), ("west", "MUL_EN", (-2, -14, 78, 29)),
+    ("north", "MUL_EN", (-37, -1, 75, 31)), ("south", "WWWWWW", (-49, -30, 98, 32)),
+]
+
+
+@pytest.mark.parametrize("facing,label,drawn", DRAWN_TUNNELS, ids=[f"{f}-{lab}" for f, lab, _ in DRAWN_TUNNELS])
+def test_tunnel_bounds_contain_what_logisim_draws(facing, label, drawn):
+    x, y, w, h = geometry.FORMULAS[("#Wiring", "Tunnel")]("Tunnel", {"facing": facing, "label": label}).bounds
+    dx, dy, dw, dh = drawn
+    assert x <= dx and y <= dy and x + w >= dx + dw and y + h >= dy + dh, (x, y, w, h)
