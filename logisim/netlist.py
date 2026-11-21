@@ -155,7 +155,9 @@ def component_ports(project: Project, circ: Circuit) -> tuple[list[list[Port]], 
     return all_ports, unknown
 
 
-def extract(project: Project, circ: Circuit | str) -> Netlist:
+def extract(project: Project, circ: Circuit | str, *, isolate: int | None = None) -> Netlist:
+    """The nets of `circ`. Tunnel `isolate` (a component index) joins no other tunnel, so its
+    net holds only what is wired to it."""
     if isinstance(circ, str):
         circ = project.circuit(circ)
     uf = UnionFind()
@@ -179,7 +181,7 @@ def extract(project: Project, circ: Circuit | str) -> Netlist:
 
     tunnels: dict[str, list[Point]] = defaultdict(list)
     for ci, c in enumerate(circ.components):
-        if c.name == "Tunnel" and c.label and all_ports[ci]:
+        if c.name == "Tunnel" and c.label and all_ports[ci] and ci != isolate:
             tunnels[c.label].append(all_ports[ci][0].pos)
     for label, pts in tunnels.items():
         for pt in pts:
