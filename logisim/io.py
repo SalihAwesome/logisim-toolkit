@@ -123,16 +123,13 @@ def to_element(proj: Project) -> ET.Element:
         le.extend(lib.tools)
     if proj.main is not None:
         ET.SubElement(root, "main", {"name": proj.main})
-    for elt in (proj.options, proj.mappings, proj.toolbar):
-        if elt is not None:
-            root.append(elt)
-    if proj.options is None:
+    if proj.options is not None:
+        root.append(proj.options)
+    else:
         opts = ET.SubElement(root, "options")
         _write_attrs(opts, {"gateUndefined": "ignore", "simlimit": "1000", "simrand": "0"})
-    if proj.mappings is None:
-        ET.SubElement(root, "mappings")
-    if proj.toolbar is None:
-        ET.SubElement(root, "toolbar")
+    for tag, elt in (("mappings", proj.mappings), ("toolbar", proj.toolbar)):
+        root.append(elt if elt is not None else ET.Element(tag))
     root.extend(proj.extras)
     for circ in proj.circuits:
         root.append(_circuit_element(circ))
@@ -165,7 +162,8 @@ def dumps(proj: Project) -> str:
     ET.indent(root, space="  ")
     # ET.indent replaces the header text's trailing whitespace; restore Logisim's layout.
     root.text = "\n  " + HEADER_TEXT + "\n\n  "
-    body = ET.tostring(root, encoding="unicode", short_empty_elements=True)
+    # Logisim writes empty elements as <x/>; ElementTree escapes ">" in text and attributes.
+    body = ET.tostring(root, encoding="unicode", short_empty_elements=True).replace(" />", "/>")
     return '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + body + "\n"
 
 

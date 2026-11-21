@@ -30,6 +30,48 @@ LIB_DESC = {
     "hdl": "#HDL-IP",
 }
 
+# What Logisim-evolution 3.9.0 saves for File > New, built from its
+# resources/logisim/default.templ. Without the toolbar and mappings Logisim
+# opens the file with no Poke tool, so input pins can't be clicked.
+_NEW_FILE = """<project>
+  <lib desc="#Wiring" name="0"><tool name="Pin"><a name="appearance" val="classic"/></tool></lib>
+  <lib desc="#Gates" name="1"/>
+  <lib desc="#Plexers" name="2"/>
+  <lib desc="#Arithmetic" name="3"/>
+  <lib desc="#Memory" name="4"/>
+  <lib desc="#I/O" name="5"/>
+  <lib desc="#TTL" name="6"/>
+  <lib desc="#TCL" name="7"/>
+  <lib desc="#Base" name="8"/>
+  <lib desc="#BFH-Praktika" name="9"/>
+  <lib desc="#Input/Output-Extra" name="10"/>
+  <lib desc="#Soc" name="11"/>
+  <mappings>
+    <tool lib="8" map="Button2" name="Poke Tool"/>
+    <tool lib="8" map="Button3" name="Menu Tool"/>
+    <tool lib="8" map="Ctrl Button1" name="Menu Tool"/>
+  </mappings>
+  <toolbar>
+    <tool lib="8" name="Poke Tool"/>
+    <tool lib="8" name="Edit Tool"/>
+    <tool lib="8" name="Wiring Tool"/>
+    <tool lib="8" name="Text Tool"/>
+    <sep/>
+    <tool lib="0" name="Pin"/>
+    <tool lib="0" name="Pin"><a name="facing" val="west"/><a name="output" val="true"/></tool>
+    <sep/>
+    <tool lib="1" name="NOT Gate"/>
+    <tool lib="1" name="AND Gate"/>
+    <tool lib="1" name="OR Gate"/>
+    <tool lib="1" name="XOR Gate"/>
+    <tool lib="1" name="NAND Gate"/>
+    <tool lib="1" name="NOR Gate"/>
+    <sep/>
+    <tool lib="4" name="D Flip-Flop"/>
+    <tool lib="4" name="Register"/>
+  </toolbar>
+</project>"""
+
 
 @dataclass
 class Component:
@@ -173,8 +215,10 @@ class Project:
     @classmethod
     def new(cls) -> "Project":
         p = cls()
-        p.lib_id("wiring")
-        p.lib_id("gates")
+        tmpl = ET.fromstring(_NEW_FILE)
+        p.libraries = [Library(e.get("name"), e.get("desc"), list(e)) for e in tmpl.iter("lib")]
+        p.mappings = tmpl.find("mappings")
+        p.toolbar = tmpl.find("toolbar")
         return p
 
     def circuit(self, name: str) -> Circuit:

@@ -61,3 +61,12 @@ def test_bad_input_raises_clear_error():
         io.loads("<foo/>")
     with pytest.raises(io.CircFormatError, match="bad location"):
         io.loads('<project><circuit name="m"><comp name="Pin" loc="1,2"/></circuit></project>')
+
+
+def test_new_project_has_logisims_toolbar_so_pins_can_be_poked():
+    root = ET.fromstring(io.dumps(Project.new()))
+    base = next(lib.get("name") for lib in root.iter("lib") if lib.get("desc") == "#Base")
+    toolbar = [(t.get("lib"), t.get("name")) for t in root.find("toolbar").iter("tool")]
+    assert (base, "Poke Tool") in toolbar
+    assert root.find("mappings").find("tool").get("name") == "Poke Tool"
+    assert [c.tag for c in root if c.tag != "lib"] == ["options", "mappings", "toolbar"]
