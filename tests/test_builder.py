@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from logisim import io, jar, netlist, route
+from logisim import generate, io, jar, netlist, route
 from logisim.builder import BuildError, Circuit, Project
 from logisim.layout import connectivity_errors
 from logisim.model import Component, Project as ModelProject
@@ -95,6 +95,44 @@ def test_layout_invariants(name):
             assert w.horizontal or w.vertical
         for c in circ.components:
             assert c.loc[0] % 10 == 0 and c.loc[1] % 10 == 0
+
+
+def test_input_pins_follow_declaration_order():
+    c = generate.expression_circuit({"Y": "A'B + (C ^ D)", "Z": "A B + C'"})
+    drawing = Project(c).to_model().main_circuit
+    inputs = {p.label: p.loc[1] for p in drawing.find("Pin")}
+
+    assert inputs["A"] < inputs["B"] < inputs["C"] < inputs["D"]
+
+
+def test_output_pins_follow_declaration_order():
+    drawing = Project(full_adder()).to_model().main_circuit
+    outputs = {p.label: p.loc[1] for p in drawing.find("Pin")}
+
+    assert outputs["S"] < outputs["Cout"]
+
+
+def test_control_pins_follow_declaration_order():
+    c = Circuit("controls")
+    first = c.input("Zctrl", control=True)
+    second = c.input("Actrl", control=True)
+    c.output("Y", c.and_(first, second))
+    drawing = Project(c).to_model().main_circuit
+    pins = {p.label: p for p in drawing.find("Pin")}
+
+    assert pins["Zctrl"].facing == pins["Actrl"].facing == "south"
+    assert pins["Zctrl"].loc[0] < pins["Actrl"].loc[0]
+
+
+def test_decoder_output_gates_share_the_last_logic_column():
+    c = generate.decoder(3)
+    drawing = Project(c).to_model().main_circuit
+    drivers = [drawing.components[n.inputs["p"].node.index]
+               for n in c.nodes if n.role == "output"]
+
+    assert len(drivers) == 8
+    assert all(gate.name == "AND Gate" for gate in drivers)
+    assert len({gate.loc[0] for gate in drivers}) == 1
 
 
 def test_tunnel_mode_uses_tunnels():

@@ -4,7 +4,8 @@
    component at its longest-path depth (feedback edges removed), then pulled
    right toward its consumers. Control inputs (clock, reset, enable, select)
    go in a row above the circuit.
-2. Ordering: barycenter sweeps inside each column to reduce crossings.
+2. Ordering: barycenter sweeps reduce crossings in the logic columns while
+   pins stay in declaration order.
 3. Coordinates: column x from the widest component plus a routing channel
    sized by the nets that jog in it; row y solved per column so each
    component's inputs line up with their drivers (isotonic regression keeps
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from math import ceil
 
 from . import geometry, model, route
 from .builder import CONTROL_PORTS, Circuit, Node, Terminal
@@ -104,11 +106,16 @@ def _layers(circ: Circuit) -> dict[int, int]:
     ids = {id(n) for n in nodes}
     preds: dict[int, list[Node]] = defaultdict(list)
     succs: dict[int, list[Node]] = defaultdict(list)
-    for n in nodes:
+    output_drivers: set[int] = set()
+    other_drivers: set[int] = set()
+    for n in circ.nodes:
+        drivers = output_drivers if n.role == "output" else other_drivers
         for port, src in n.inputs.items():
-            if id(src.node) in ids and not is_control_edge(n, port):
+            source = id(src.node)
+            drivers.add(source)
+            if id(n) in ids and source in ids and not is_control_edge(n, port):
                 preds[id(n)].append(src.node)
-                succs[id(src.node)].append(n)
+                succs[source].append(n)
 
     # Remove feedback: DFS from sources, drop back edges.
     back: set[tuple[int, int]] = set()
@@ -164,19 +171,20 @@ def _layers(circ: Circuit) -> dict[int, int]:
     for n in nodes:
         depth(n)
     logic_max = max((layer[id(n)] for n in nodes if n.role not in ("input", "output")), default=0)
+    output_only = output_drivers - other_drivers
     # Pull sources and early nodes right, next to their first consumer.
+    # Output-only drivers go immediately before the shared output column.
     for n in sorted(nodes, key=lambda n: -layer[id(n)]):
         if n.role in ("input", "output"):
             continue
         ss = [layer[id(s)] for s in fsuccs.get(id(n), []) if s.role != "output"]
         if ss:
             layer[id(n)] = max(layer[id(n)], min(ss) - 1)
-        elif not fsuccs.get(id(n)):
-            layer[id(n)] = max(layer[id(n)], 1)
-    out_layer = max([logic_max + 1] + [layer[id(n)] + 1 for n in nodes if n.role not in ("input", "output")])
+        elif id(n) in output_only:
+            layer[id(n)] = logic_max
     for n in nodes:
         if n.role == "output":
-            layer[id(n)] = out_layer
+            layer[id(n)] = logic_max + 1
         elif n.role != "input":
             layer[id(n)] = max(1, layer[id(n)])
     return layer
@@ -260,12 +268,15 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
             return (sum(ns) / len(ns)) if ns else pos[id(p)]
         col.sort(key=key)
 
+    has_outputs = any(n.role == "output" for n in circ.nodes)
+    logic_columns = range(1, nlayers - 1 if has_outputs else nlayers)
     for _ in range(4):
-        for k in range(1, nlayers):
+        for k in logic_columns:
             reorder(cols[k], True)
-        for k in range(nlayers - 2, -1, -1):
+        for k in reversed(logic_columns):
             reorder(cols[k], False)
-    for k in range(1, nlayers):
+    # Leave the last logic column ordered by its sinks in the fixed output column.
+    for k in logic_columns[:-1] if has_outputs else logic_columns:
         reorder(cols[k], True)
 
     # ---- x coordinates
@@ -349,7 +360,8 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
     # ---- control row: control inputs sit above (or below) the channel left of their first sink
     real = [p for col in cols for p in col]
     body_bottom = max((p.y + p.bottom for p in real), default=0)
-    next_x: dict[tuple[str, int], int] = {}
+    control_x: list[float] = []
+    control_widths: list[int] = []
     for p in controls:
         sinks = [t for (nid, _), ts in drivers.items() if nid == id(p.node) for t in ts]
         down = 0
@@ -361,18 +373,20 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
         p.shape = p.node.shape()
         ks = [placed[id(t.node)].layer for t in sinks if placed[id(t.node)].layer >= 0]
         k = max(min(ks) if ks else 1, 1)
-        key = (row, k)
-        width = max(40, LABEL_CHAR * len(p.node.label) + 20)
-        if key not in next_x:
-            next_x[key] = col_left[k] - col_gap // 2 if k < len(col_left) else x + 40
         vertical = [t for t in sinks if port_side(placed[id(t.node)].shape, t.port)[0] == 0]
         if len(sinks) == 1 and vertical:
-            p.x = placed[id(vertical[0].node)].port_abs(vertical[0].port)[0]  # straight down/up
+            want_x = placed[id(vertical[0].node)].port_abs(vertical[0].port)[0]
         else:
-            p.x = snap(next_x[key])
-            next_x[key] -= snap(width)
+            want_x = col_left[k] - col_gap // 2 if k < len(col_left) else x + 40
+        control_x.append(want_x)
+        control_widths.append(max(40, LABEL_CHAR * len(p.node.label) + 20))
         p.y = snap(margin + 30) if row == "top" else snap(body_bottom + ctrl_gap)
-        p.layer = -1
+
+    # Stay near the sink channels while keeping control labels in declaration order.
+    control_spacing = [ceil((a + b) / (2 * G)) * G
+                       for a, b in zip(control_widths, control_widths[1:])]
+    for p, want_x in zip(controls, _isotonic(control_x, control_spacing)):
+        p.x = snap(want_x)
 
     # ---- emit components
     mc = model.Circuit(circ.name, attrs={"circuit": circ.name, "appearance": circ.appearance})
@@ -434,19 +448,21 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
                     q = (q[0] + dx, q[1] + dy)
                 grid.blocked.discard(q)
 
-    def span(item) -> int:
+    def routing_span(item) -> int:
         src, port, sinks = item
-        sx, sy = src.port_abs(port)
-        return max(abs(placed[id(t.node)].port_abs(t.port)[0] - sx) +
-                   abs(placed[id(t.node)].port_abs(t.port)[1] - sy) for t in sinks)
+        # Route the closely spaced inputs of bus merges together, longest jogs first.
+        if any(t.node.name == "Splitter" and t.port != "comb" for t in sinks):
+            return 0
+        sx = src.port_abs(port)[0]
+        return max(abs(placed[id(t.node)].port_abs(t.port)[0] - sx) for t in sinks)
 
     def rise(item) -> int:
         src, port, sinks = item
         sy = src.port_abs(port)[1]
         return max(abs(placed[id(t.node)].port_abs(t.port)[1] - sy) for t in sinks)
 
-    # straight nets first (they cannot be improved), then the nets that climb furthest, so
-    # fan-ins into closely spaced ports nest instead of crossing
+    # Route straight nets first, then reserve the local routes before threading longer
+    # nets through multiple columns. Within a span, nest the largest jogs first.
     def nest(item) -> int:
         """Among equal jogs, downward ones route upper-target-first, upward ones lower-first."""
         src, port, sinks = item
@@ -455,7 +471,8 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
         return ty if ty > sy else -ty
 
     order = sorted(range(len(nets)),
-                   key=lambda i: (rise(nets[i]) > 0, -rise(nets[i]), nest(nets[i]), span(nets[i]), i))
+                   key=lambda i: (rise(nets[i]) > 0, routing_span(nets[i]), -rise(nets[i]), nest(nets[i]), i))
+    costs = route.Costs(cross=14, near_wire=8)
     tunnels = _Tunnels(circ, mc, project.lib_id("wiring"), grid, nets, placed)
     wired = {(i, id(t.node), t.port) for i in order for t in nets[i][2]}
     if circ.use_tunnels:
@@ -483,7 +500,7 @@ def place_and_route(circ: Circuit, project: model.Project) -> model.Circuit:
                 continue
             sp = placed[id(t.node)]
             s_pt = sp.port_abs(t.port)
-            path = route.route(grid, i, s_pt, tree, start_dir=outward(sp, t.port))
+            path = route.route(grid, i, s_pt, tree, costs, start_dir=outward(sp, t.port))
             if path is None:
                 tunnels.sink(i, t)
                 continue

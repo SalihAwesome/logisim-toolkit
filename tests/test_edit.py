@@ -6,9 +6,11 @@ change it).  The JAR tests check the edited files against a Python reference
 with the real Logisim.
 """
 
+from itertools import count
+
 import pytest
 
-from logisim import edit, io, lint, netlist, sim
+from logisim import edit, geometry, io, lint, netlist, sim
 from logisim.builder import Circuit as BCircuit
 from logisim.builder import Project as BProject
 from logisim.model import Component, Project as ModelProject, Wire
@@ -76,6 +78,25 @@ def gates(circuit) -> list[int]:
     return [i for i, c in enumerate(circuit.components) if c.name.endswith("Gate")]
 
 
+def move_to_free_space(project, circuit, comp, dx, dy):
+    """Try successive offsets in the given direction until the move clears bodies and wires."""
+    assert dx or dy
+    x, y = comp.loc
+    for step in count(1):
+        loc = (x + step * dx, y + step * dy)
+        if edit._location_ok(project, circuit, comp.name, comp.lib, comp.attrs, loc, ignore=comp):
+            return edit.move_component(project, circuit, comp, dx=step * dx, dy=step * dy)
+
+
+def pin_net(project, circuit, label):
+    pin = edit.find_component(project, circuit, name="Pin", label=label)
+    return netlist.extract(project, circuit).net_of(pin.index, "p")
+
+
+def sum_driver(circuit, s_net):
+    return next(p for p in s_net.drivers() if circuit.components[p.comp].name == "XOR Gate")
+
+
 # ------------------------------------------------------------------ query
 
 
@@ -126,14 +147,16 @@ def test_add_component_in_free_space():
 def test_add_component_connected_to_a_net():
     project = fa_project()
     circuit = project.circuit("full_adder")
+    a_pin_info = edit.find_component(project, circuit, name="Pin", label="A")
+    a_port = (a_pin_info.index, "p")
     before = partition_by_object(project, "full_adder")
     info = edit.add_component(project, "full_adder", "NOT Gate", lib="gates",
-                              connections={"in": (0, "p")})
+                              connections={"in": a_port})
     nl = netlist.extract(project, circuit)
     # the new gate's input joined the net of pin A
-    assert nl.port_net[(info.index, "in")] == nl.port_net[(0, "p")]
+    assert nl.port_net[(info.index, "in")] == nl.port_net[a_port]
     after = partition_by_object(project, "full_adder")
-    a_pin = circuit.components[0]
+    a_pin = circuit.components[a_pin_info.index]
     for group in before:
         if id(a_pin) not in {c for c, _ in group}:
             assert group in after
@@ -142,8 +165,9 @@ def test_add_component_connected_to_a_net():
 
 def test_add_component_refuses_an_occupied_location():
     project = fa_project()
+    occupied = edit.find_component(project, "full_adder", name="OR Gate").loc
     with pytest.raises(edit.EditError, match="already sits at"):
-        edit.add_component(project, "full_adder", "NOT Gate", lib="gates", loc=(280, 210))
+        edit.add_component(project, "full_adder", "NOT Gate", lib="gates", loc=occupied)
 
 
 def test_grid_invariants_after_edits():
@@ -151,11 +175,8 @@ def test_grid_invariants_after_edits():
     at the same location."""
     project = fa_project()
     circuit = project.circuit("full_adder")
-    target = edit.find_components(project, circuit, name="AND Gate")[0]
-    edit.move_component(project, circuit, target, dx=30, dy=-60)
-    nl = netlist.extract(project, circuit)
-    s_net = next(n for n in nl.nets if any(p.comp == 5 for p in n.ports))
-    edit.insert_gate(project, circuit, s_net, "NOT Gate")
+    move_to_free_space(project, circuit, circuit.find("AND Gate")[0], 30, -60)
+    edit.insert_gate(project, circuit, pin_net(project, circuit, "S"), "NOT Gate")
     locs = [c.loc for c in circuit.components]
     assert len(locs) == len(set(locs))
     for c in circuit.components:
@@ -173,8 +194,7 @@ def test_move_keeps_connectivity(dx, dy):
     project = fa_project()
     circuit = project.circuit("full_adder")
     before = signature(project, "full_adder")
-    target = edit.find_components(project, circuit, name="AND Gate")[0]
-    edit.move_component(project, circuit, target, dx=dx, dy=dy)
+    move_to_free_space(project, circuit, circuit.find("AND Gate")[0], dx, dy)
     assert signature(project, "full_adder") == before
     assert not errors(project, "full_adder")
 
@@ -186,32 +206,38 @@ def test_move_of_every_gate_keeps_connectivity():
         circuit = project.circuit("full_adder")
         before = signature(project, "full_adder")
         index = gates(circuit)[k]
-        edit.move_component(project, circuit, index, dx=30 * (k % 3), dy=-60 * (k % 2))
+        move_to_free_space(project, circuit, circuit.components[index], 30 * (k % 3 + 1), -60 * (k % 2))
         assert signature(project, "full_adder") == before, k
         assert not errors(project, "full_adder"), k
 
-def test_move_first_and_gate_down_by_200():
-    """A move that used to fail with "could not route a wire". The gate would land on the
-    XOR's body, so it is refused unless forced."""
+def test_move_into_overlapping_body_requires_force():
+    """A move that lands on the sum XOR's body is refused unless forced."""
     project = fa_project()
     circuit = project.circuit("full_adder")
     before = signature(project, "full_adder")
-    target = edit.find_components(project, circuit, name="AND Gate")[0]
+    target = circuit.find("AND Gate")[0]
+    driver = sum_driver(circuit, pin_net(project, circuit, "S"))
+    neighbor = circuit.components[driver.comp]
+    bx, by, bw, bh = geometry.bounds(project, neighbor)
+    x, y, _, _ = geometry.bounds(project, target)
+    # Overlap the bottom-right corner of the XOR with the top-left of the AND.
+    loc = (target.loc[0] + bx + bw - 10 - x,
+           target.loc[1] + by + bh - 10 - y)
     with pytest.raises(edit.EditError, match="would overlap"):
-        edit.move_component(project, circuit, target, dy=200)
+        edit.move_component(project, circuit, target, loc=loc)
     assert signature(project, "full_adder") == before
-    edit.move_component(project, circuit, target, dy=200, force=True)
+    edit.move_component(project, circuit, target, loc=loc, force=True)
+    assert target.loc == loc
     assert signature(project, "full_adder") == before
     assert not errors(project, "full_adder")
 
 
 def test_move_of_the_xor_that_drives_the_output_pin():
-    """A move that used to fail with "could not route a wire from (530,310)"."""
     project = fa_project()
     circuit = project.circuit("full_adder")
     before = signature(project, "full_adder")
-    xors = edit.find_components(project, circuit, name="XOR Gate")
-    edit.move_component(project, circuit, xors[1], dx=30, dy=0)
+    driver = sum_driver(circuit, pin_net(project, circuit, "S"))
+    move_to_free_space(project, circuit, circuit.components[driver.comp], 30, 0)
     assert signature(project, "full_adder") == before
     assert not errors(project, "full_adder")
 
@@ -219,9 +245,9 @@ def test_move_of_the_xor_that_drives_the_output_pin():
 def test_move_onto_another_component_is_refused():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    target = edit.find_components(project, circuit, name="AND Gate")[0]
+    target, occupied = circuit.find("AND Gate")
     with pytest.raises(edit.EditError, match="already sits at"):
-        edit.move_component(project, circuit, target, loc=(490, 200))
+        edit.move_component(project, circuit, target, loc=occupied.loc)
 
 
 # ----------------------------------------------------------------- rotate
@@ -392,24 +418,23 @@ def test_rename_pin_refuses_duplicates():
 def test_insert_not_into_the_output_net():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    nl = netlist.extract(project, circuit)
-    s_net = next(n for n in nl.nets if any(p.comp == 5 for p in n.ports))
+    s_pin = edit.find_component(project, circuit, name="Pin", label="S")
+    s_net = pin_net(project, circuit, "S")
+    driver = sum_driver(circuit, s_net)
     before = partition_by_object(project, "full_adder")
     info = edit.insert_gate(project, circuit, s_net, "NOT Gate")
     assert info.name == "NOT Gate"
     # the new gate sits on the net's path, in the driver's row
-    driver = next(c for c in circuit.components if c.name == "XOR Gate" and c.loc[0] == 500)
-    assert info.loc[1] == driver.loc[1]
-    assert driver.loc[0] < info.loc[0] < 790
+    assert info.loc[1] == driver.port.y
+    assert driver.port.x < info.loc[0] < s_pin.loc[0]
     # the driver now feeds the new gate, the new gate feeds the output pin
     nl = netlist.extract(project, circuit)
-    xor_index = circuit.components.index(driver)
     not_index = info.index
-    assert nl.port_net[(xor_index, "out")] == nl.port_net[(not_index, "in")]
-    assert nl.port_net[(not_index, "out")] == nl.port_net[(5, "p")]
+    assert nl.port_net[(driver.comp, "out")] == nl.port_net[(not_index, "in")]
+    assert nl.port_net[(not_index, "out")] == nl.port_net[(s_pin.index, "p")]
     # the other nets are untouched
     after = partition_by_object(project, "full_adder")
-    out_pin = circuit.components[5]
+    out_pin = circuit.components[s_pin.index]
     for group in before:
         if id(out_pin) not in {c for c, _ in group}:
             assert group in after
@@ -419,17 +444,17 @@ def test_insert_not_into_the_output_net():
 def test_insert_gate_with_an_extra_input():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    nl = netlist.extract(project, circuit)
-    s_net = next(n for n in nl.nets if any(p.comp == 5 for p in n.ports))
-    driver = next(i for i, c in enumerate(circuit.components)
-                  if c.name == "XOR Gate" and c.loc[0] == 500)
+    a_pin = edit.find_component(project, circuit, name="Pin", label="A")
+    s_pin = edit.find_component(project, circuit, name="Pin", label="S")
+    s_net = pin_net(project, circuit, "S")
+    driver = sum_driver(circuit, s_net)
     info = edit.insert_gate(project, circuit, s_net, "AND Gate", attrs={"inputs": "2"},
-                             extra_inputs={"in1": (0, "p")})
+                            extra_inputs={"in1": (a_pin.index, "p")})
     nl = netlist.extract(project, circuit)
     # in0 carries the old net, in1 the extra one, out drives the output pin
-    assert nl.port_net[(info.index, "in0")] == nl.port_net[(driver, "out")]
-    assert nl.port_net[(info.index, "in1")] == nl.port_net[(0, "p")]
-    assert nl.port_net[(info.index, "out")] == nl.port_net[(5, "p")]
+    assert nl.port_net[(info.index, "in0")] == nl.port_net[(driver.comp, "out")]
+    assert nl.port_net[(info.index, "in1")] == nl.port_net[(a_pin.index, "p")]
+    assert nl.port_net[(info.index, "out")] == nl.port_net[(s_pin.index, "p")]
     assert not errors(project, "full_adder")
 
 
@@ -447,27 +472,45 @@ def test_insert_gate_in_front_of_one_sink_only():
     """Only the chosen sink is fed by the new gate; the others stay on the net."""
     project = fa_project()
     circuit = project.circuit("full_adder")
-    nl = netlist.extract(project, circuit)
-    a_net = next(n for n in nl.nets if len(n.ports) == 3)
-    info = edit.insert_gate(project, circuit, a_net, "NOT Gate", sinks=[(3, "in0")])
+    a_net = pin_net(project, circuit, "A")
+    driver, = a_net.drivers()
+    xor = next(p for p in a_net.sinks() if circuit.components[p.comp].name == "XOR Gate")
+    and_gate = next(p for p in a_net.sinks() if circuit.components[p.comp].name == "AND Gate")
+    a_port = (driver.comp, driver.port.name)
+    xor_port = (xor.comp, xor.port.name)
+    info = edit.insert_gate(project, circuit, a_net, "NOT Gate", sinks=[xor_port])
     nl = netlist.extract(project, circuit)
     # the driver and the other sink keep the old net ...
-    assert nl.port_net[(0, "p")] == nl.port_net[(6, "in0")]
+    assert nl.port_net[a_port] == nl.port_net[(and_gate.comp, and_gate.port.name)]
     # ... the chosen sink is fed by the new gate
-    assert nl.port_net[(3, "in0")] == nl.port_net[(info.index, "out")]
-    assert nl.port_net[(info.index, "in")] == nl.port_net[(0, "p")]
+    assert nl.port_net[xor_port] == nl.port_net[(info.index, "out")]
+    assert nl.port_net[(info.index, "in")] == nl.port_net[a_port]
     assert not errors(project, "full_adder")
 
 
 # ------------------------------------------------------------------ wires
 
 
+def carry_input_wire(project, circuit):
+    gate = circuit.find("OR Gate")[0]
+    port = geometry.port(project, gate, "in0")
+    return next(w for w in circuit.wires if port.pos in (w.a, w.b))
+
+
+def b_net_trunk(project, circuit):
+    net = pin_net(project, circuit, "B")
+    ports = {p.port.pos for p in net.ports}
+    return next(circuit.wires[i] for i in net.wires
+                if not ports.intersection((circuit.wires[i].a, circuit.wires[i].b)))
+
+
 def test_delete_wire_by_endpoints():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    removed = edit.delete_wires(project, circuit, endpoints=((620, 90), (490, 90)))
-    assert len(removed) == 1
-    assert (620, 90) not in [w.a for w in circuit.wires]
+    wire = carry_input_wire(project, circuit)
+    removed = edit.delete_wires(project, circuit, endpoints=(wire.a, wire.b))
+    assert removed == [wire]
+    assert wire.a not in [w.a for w in circuit.wires]
     assert "dangling-wire" not in codes(project, "full_adder")
     assert not errors(project, "full_adder")
 
@@ -475,9 +518,10 @@ def test_delete_wire_by_endpoints():
 def test_delete_wires_touching_a_point():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    removed = edit.delete_wires(project, circuit, point=(500, 310))
+    point = sum_driver(circuit, pin_net(project, circuit, "S")).port.pos
+    removed = edit.delete_wires(project, circuit, point=point)
     assert removed
-    assert all(not w.contains((500, 310)) for w in circuit.wires)
+    assert all(not w.contains(point) for w in circuit.wires)
     assert "dangling-wire" not in codes(project, "full_adder")
 
 
@@ -485,7 +529,8 @@ def test_cleanup_wires_removes_dangling_pieces():
     project = fa_project()
     circuit = project.circuit("full_adder")
     # cut the wire in the middle of the B net: the loose ends must disappear
-    edit.delete_wires(project, circuit, endpoints=((200, 110), (200, 230)))
+    wire = b_net_trunk(project, circuit)
+    assert edit.delete_wires(project, circuit, endpoints=(wire.a, wire.b)) == [wire]
     assert "dangling-wire" not in codes(project, "full_adder")
 
 
@@ -498,7 +543,7 @@ def test_delete_wires_needs_a_target():
 def test_delete_wires_by_object():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    wire = next(w for w in circuit.wires if (w.a, w.b) == ((620, 90), (490, 90)))
+    wire = carry_input_wire(project, circuit)
     removed = edit.delete_wires(project, circuit, wires=[wire])
     assert removed == [wire]
     assert wire not in circuit.wires
@@ -508,7 +553,8 @@ def test_delete_wires_by_object():
 def test_cleanup_wires_merges_collinear_pieces():
     project = fa_project()
     circuit = project.circuit("full_adder")
-    edit.delete_wires(project, circuit, endpoints=((200, 110), (200, 230)))
+    wire = b_net_trunk(project, circuit)
+    assert edit.delete_wires(project, circuit, endpoints=(wire.a, wire.b)) == [wire]
     # no wire end is left in mid-air
     for w in circuit.wires:
         for end in (w.a, w.b):
@@ -601,7 +647,7 @@ def test_tidy_of_a_messy_circuit():
     circuit = project.circuit("full_adder")
     # make a mess first
     for k, index in enumerate(gates(circuit)):
-        edit.move_component(project, circuit, index, dx=30 * (k % 3), dy=-60 * (k % 2))
+        move_to_free_space(project, circuit, circuit.components[index], 30 * (k % 3 + 1), -60 * (k % 2))
     before = signature(project, "full_adder")
     edit.tidy(project, "full_adder")
     assert signature(project, "full_adder") == before
@@ -655,7 +701,9 @@ def test_save_in_place_keeps_a_backup(tmp_path):
     path = tmp_path / "out.circ"
     edit.save(project, path)
     first = path.read_text()
-    edit.move_component(project, "full_adder", 0, dx=20)
+    circuit = project.circuit("full_adder")
+    a_pin = edit.find_component(project, circuit, name="Pin", label="A")
+    move_to_free_space(project, circuit, circuit.components[a_pin.index], -20, 0)
     edit.save(project, path, in_place=True)
     assert path.read_text() != first
     bak = path.with_suffix(path.suffix + ".bak")
@@ -670,9 +718,7 @@ def test_save_in_place_keeps_a_backup(tmp_path):
 def test_jar_verify_after_inserting_a_not(tmp_path):
     project = fa_project()
     circuit = project.circuit("full_adder")
-    nl = netlist.extract(project, circuit)
-    s_net = next(n for n in nl.nets if any(p.comp == 5 for p in n.ports))
-    edit.insert_gate(project, circuit, s_net, "NOT Gate")
+    edit.insert_gate(project, circuit, pin_net(project, circuit, "S"), "NOT Gate")
     path = tmp_path / "fa.circ"
     edit.save(project, path)
     r = sim.verify(path, lambda A, B, Cin: {"S": 1 - (A ^ B ^ Cin),
@@ -684,8 +730,7 @@ def test_jar_verify_after_inserting_a_not(tmp_path):
 def test_jar_verify_after_moving_and_rotating(tmp_path):
     project = fa_project()
     circuit = project.circuit("full_adder")
-    target = edit.find_components(project, circuit, name="AND Gate")[0]
-    edit.move_component(project, circuit, target, dx=30, dy=-60)
+    move_to_free_space(project, circuit, circuit.find("AND Gate")[0], 30, -60)
     other = edit.find_component(project, circuit, name="OR Gate")
     edit.rotate_component(project, circuit, other, facing="north")
     path = tmp_path / "fa.circ"
