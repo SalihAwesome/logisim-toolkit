@@ -317,9 +317,9 @@ def _ring(r: int):
         yield (r, j)
 
 
-def _build_grid(project: Project, circ: Circuit):
+def _build_grid(project: Project, circ: Circuit, *, isolate: int | None = None):
     """A route.Grid describing the current drawing, plus its netlist and a free net id."""
-    nl = netlist.extract(project, circ)
+    nl = netlist.extract(project, circ, isolate=isolate)
     shapes: dict[int, geometry.Shape] = {}
     bounds: list[tuple[int, int, int, int]] = []
     for i, c in enumerate(circ.components):
@@ -545,7 +545,8 @@ def _port_points(project: Project, comp: Component) -> dict[str, Point]:
 
 def _port_anchors(project: Project, circ: Circuit, ci: int) -> dict[str, list[tuple[int, str]]]:
     """For every port of component ``ci``: the other ports that share its net."""
-    nl = netlist.extract(project, circ)
+    # a tunnel's label would put the far side of the tunnel pair on its net; only its wires count
+    nl = netlist.extract(project, circ, isolate=ci)
     comp = circ.components[ci]
     try:
         ports = geometry.ports(project, comp)
@@ -615,7 +616,7 @@ def _reattach(project: Project, circ: Circuit, ci: int,
     ``preserve`` is a port partition (see :func:`_partition`) that the cleanup
     must not break: a wire is only removed when the nets stay the same.
     """
-    grid, nl, _ = _build_grid(project, circ)
+    grid, nl, _ = _build_grid(project, circ, isolate=ci)
     comp = circ.components[ci]
     try:
         shape = geometry.shape(project, comp)
