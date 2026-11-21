@@ -807,3 +807,26 @@ def test_type_occurrence_targets_and_named_net():
     before = len(circuit.components)
     edit.insert_gate(project, circuit, ("S", "p"))
     assert len(circuit.components) == before + 1
+
+
+def _tunnel_pair_project() -> ModelProject:
+    proj = ModelProject.new()
+    circ = proj.add_circuit("main")
+    wiring = proj.lib_id("wiring")
+    circ.add(Component("Pin", (100, 100), {"label": "A"}, wiring))
+    circ.add(Component("Tunnel", (200, 100), {"label": "a", "facing": "west"}, wiring))
+    circ.add(Component("Tunnel", (400, 200), {"label": "a", "facing": "east"}, wiring))
+    circ.add(Component("Pin", (500, 200), {"label": "Y", "output": "true", "facing": "west"}, wiring))
+    circ.add_wire((100, 100), (200, 100))
+    circ.add_wire((400, 200), (500, 200))
+    return proj
+
+
+@pytest.mark.parametrize("dx,dy", [(40, 0), (0, 40), (40, -40)])
+def test_move_of_a_tunnel_keeps_its_wired_ports(dx, dy):
+    """The tunnel's label still joins its net after the move, but the pin wired to it must stay wired."""
+    project = _tunnel_pair_project()
+    before = signature(project, "main")
+    edit.move_component(project, "main", 1, dx=dx, dy=dy)
+    assert signature(project, "main") == before
+    assert not errors(project, "main")

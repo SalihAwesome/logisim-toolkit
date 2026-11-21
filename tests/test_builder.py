@@ -337,3 +337,49 @@ def test_tunnels_are_named_after_the_output_pins_they_feed():
     model = Project(ripple_counter(4, use_tunnels=True)).to_model()
     labels = {c.label for c in model.circuit("cnt4").find("Tunnel")}
     assert {"Q0", "Q1", "Q2", "Q3"} <= labels and not any(lab.startswith("d") for lab in labels)
+
+
+@pytest.mark.parametrize("make", [
+    lambda c: c.output("ACC", c.register(c.input("D", 4), c.input("clk"), label="acc")),
+    lambda c: (c.led(c.input("A"), "L"), c.input("l")),
+    lambda c: c.probe(c.input("a"), "A"),
+], ids=["register-vs-pin", "led-vs-pin", "probe-vs-pin"])
+def test_labels_that_differ_only_in_case_are_refused(make):
+    """Logisim drops the second of two labels that match ignoring case."""
+    with pytest.raises(BuildError, match="case"):
+        make(Circuit("clash"))
+
+
+def test_tunnel_labels_may_match_other_labels():
+    c = Circuit("named", use_tunnels=True)
+    a = c.input("t")
+    c.name_net(a, "T")
+    c.output("Y", c.not_(a))
+
+
+def _base_with_one_circuit():
+    return Project(full_adder()).to_model()
+
+
+def test_project_with_base_can_instance_a_circuit_it_adds():
+    proj = Project(base=_base_with_one_circuit(), main="top")
+    sub = proj.add(Circuit("inv"))
+    sub.output("Y", sub.not_(sub.input("A")))
+    top = proj.add(Circuit("top"))
+    top.output("Y", top.instance("inv", A=top.input("A"))["Y"])
+    model = proj.to_model()
+    assert {"full_adder", "inv", "top"} <= set(model.circuit_names())
+    assert not connectivity_errors(top, model, model.circuit("top"))
+
+
+@pytest.mark.jar
+def test_project_with_base_instance_simulates(tmp_path):
+    from logisim import sim
+    proj = Project(base=_base_with_one_circuit(), main="top")
+    sub = proj.add(Circuit("inv"))
+    sub.output("Y", sub.not_(sub.input("A")))
+    top = proj.add(Circuit("top"))
+    top.output("Y", top.instance("inv", A=top.input("A"))["Y"])
+    f = proj.save(tmp_path / "top.circ")
+    res = sim.verify(f, lambda A: {"Y": 1 - A}, "top")
+    assert res.ok, res.report()
