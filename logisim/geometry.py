@@ -231,15 +231,21 @@ def _constant(name: str, attrs: dict[str, str]) -> Shape:
     return Shape((Port("out", 0, 0, width, "out"),), b)
 
 
+# Logisim 3.9 draws a tunnel's label in SansSerif bold 16 and its body is the label's string
+# width plus 10, wider than the bounds it reports before painting. These are that font's
+# FontMetrics widths for ASCII 32..126; the bounds below contain the drawn pixels.
+_TUNNEL_CHAR_W = (4, 4, 8, 9, 9, 16, 12, 4, 5, 5, 6, 9, 4, 5, 4, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 6, 6, 9, 9,
+                  9, 10, 16, 11, 12, 12, 12, 11, 10, 12, 12, 4, 9, 12, 10, 13, 12, 12, 11, 12, 12, 11, 10,
+                  12, 11, 15, 11, 10, 9, 5, 4, 5, 9, 9, 5, 9, 10, 9, 10, 9, 5, 10, 10, 4, 4, 9, 4, 14, 10,
+                  10, 10, 10, 6, 9, 5, 10, 9, 13, 9, 9, 9, 6, 4, 6, 9)
+
+
 def _tunnel(name: str, attrs: dict[str, str]) -> Shape:
     facing = _facing(attrs, "west")
     width = _width(attrs)
-    label = attrs.get("label", "")
-    # Tunnel bounds depend on font metrics; this estimate (exact_bounds=False) contains
-    # the bounds Logisim 3.9 reports, e.g. "and_2" facing west is (0, -11, 48, 22).
-    wd = max(10, 6 * len(label)) + 20
-    b = {"west": (0, -11, wd, 22), "east": (-wd, -11, wd + 1, 22),
-         "north": (-wd // 2, 0, wd, 24), "south": (-wd // 2, -24, wd, 24)}[facing]
+    w = sum(_TUNNEL_CHAR_W[ord(ch) - 32] if " " <= ch <= "~" else 16 for ch in attrs.get("label", ""))
+    b = {"east": (-(w + 10), -15, w + 12, 30), "west": (-2, -15, w + 12, 30),
+         "north": (-((w + 8) // 2) - 1, -1, w + 10, 32), "south": (-((w + 8) // 2) - 1, -31, w + 10, 33)}[facing]
     return Shape((Port("io", 0, 0, width, "inout"),), b, exact_bounds=False)
 
 
