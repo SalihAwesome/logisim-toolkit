@@ -145,7 +145,7 @@ class Circuit:
         self.net_labels: dict[int, str] = {}  # id(driver terminal key) -> label
         self._splitter_outputs: dict[int, set[str]] = {}
         self._project: "Project | None" = None
-        self._labels: set[str] = set()
+        self._labels: dict[str, str] = {}  # lowercased label -> label as written
 
     # ------------------------------------------------------------ internals
     def _shape(self, node: Node) -> geometry.Shape:
@@ -162,6 +162,9 @@ class Circuit:
         return geometry.shape(proj, comp)
 
     def _add(self, lib: str | None, name: str, attrs: dict, role: str = "logic", primary: str = "out") -> Node:
+        label = str(attrs.get("label", ""))
+        if label and name != "Tunnel":
+            self._claim_label(label)
         node = Node(self, lib, name, {k: str(v) for k, v in attrs.items()}, role=role,
                     primary=primary, index=len(self.nodes))
         self.nodes.append(node)
@@ -171,11 +174,15 @@ class Circuit:
             self._project._geom_model = None
         return node
 
-    def _label(self, label: str, kind: str) -> str:
-        if label in self._labels:
-            raise BuildError(f"duplicate {kind} label {label!r} in circuit {self.name!r}")
-        self._labels.add(label)
-        return label
+    def _claim_label(self, label: str) -> None:
+        # Logisim 3.9 clears one of two non-tunnel labels that are equal ignoring case
+        other = self._labels.get(label.lower())
+        if other == label:
+            raise BuildError(f"duplicate label {label!r} in circuit {self.name!r}")
+        if other is not None:
+            raise BuildError(f"label {label!r} matches {other!r} ignoring case in circuit {self.name!r}; "
+                             "Logisim keeps only one of them")
+        self._labels[label.lower()] = label
 
     def connect(self, src: Signal, dst: Terminal | Signal) -> None:
         """Drive sink port `dst` from signal `src`."""
@@ -215,7 +222,6 @@ class Circuit:
     # ------------------------------------------------------------ pins
     def input(self, label: str, width: int = 1, *, control: bool | None = None) -> Node:
         """Input pin. Control inputs (clock, reset, select...) are drawn along the top edge."""
-        self._label(label, "pin")
         if control is None:
             control = label.lower().rstrip("0123456789_") in CONTROL_NAMES
         attrs = {"appearance": "classic", "label": label}
@@ -227,7 +233,6 @@ class Circuit:
         return [self.input(lab, width) for lab in labels]
 
     def output(self, label: str, sig: Signal, width: int | None = None) -> Node:
-        self._label(label, "pin")
         w = width or self._width_of(sig)
         attrs = {"appearance": "classic", "facing": "west", "label": label, "labelloc": "east",
                  "output": "true"}
@@ -243,7 +248,6 @@ class Circuit:
         return self._add("#Wiring", "Constant", attrs, role="const")
 
     def clock(self, label: str = "clk") -> Node:
-        self._label(label, "clock")
         return self._add("#Wiring", "Clock", {"label": label}, role="control")
 
     # ------------------------------------------------------------ gates

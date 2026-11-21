@@ -180,15 +180,19 @@ def tunnels(ctx: Ctx) -> Iterator[Issue]:
 
 
 def pins(ctx: Ctx) -> Iterator[Issue]:
-    seen: dict[str, Component] = {}
     for c in ctx.circ.pins():
         if not c.label:
             yield ctx.issue("unlabeled-pin", "warning", "pin has no label (tests and subcircuit "
                             "instances need one)", c.loc)
-        elif c.label in seen:
-            yield ctx.issue("duplicate-label", "error", f"two pins are labelled {c.label!r}", c.loc)
-        else:
-            seen[c.label] = c
+    # Logisim clears one of two non-tunnel labels that are equal ignoring case
+    seen: dict[str, Component] = {}
+    for c in ctx.circ.components:
+        if not c.label or c.name == "Tunnel":
+            continue
+        other = seen.setdefault(c.label.lower(), c)
+        if other is not c:
+            yield ctx.issue("duplicate-label", "error", f"{other.name} {other.label!r} and {c.name} "
+                            f"{c.label!r} have the same label ignoring case", c.loc)
 
 
 def unknown_geometry(ctx: Ctx) -> Iterator[Issue]:
