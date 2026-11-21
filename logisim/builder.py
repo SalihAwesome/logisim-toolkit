@@ -539,16 +539,21 @@ class Project:
         """Model used for subcircuit port geometry.
 
         During to_model() this is the project being built, so instances see the
-        final pin positions of already laid-out subcircuits. Before that, pins are
-        stacked in declaration order (good enough for port names and widths).
+        final pin positions of already laid-out subcircuits. Before that, the base
+        project's circuits are used as they are, and the pins of each builder
+        circuit are stacked in declaration order (good enough for port names and widths).
         """
         if self._building is not None:
             return self._building
-        if self.base is not None:
-            return self.base
         if self._geom_model is None:
-            p = model.Project.new()
+            if self.base is None:
+                p = model.Project.new()
+            else:
+                # new lists, so adding stubs or a library leaves the caller's base untouched
+                p = model.Project(circuits=list(self.base.circuits), libraries=list(self.base.libraries))
             for c in self.circuits:
+                if p.has_circuit(c.name):
+                    continue
                 mc = p.add_circuit(c.name)
                 mc.attrs["appearance"] = c.appearance
                 k = 0
